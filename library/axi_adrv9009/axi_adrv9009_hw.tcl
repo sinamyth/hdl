@@ -16,7 +16,10 @@ add_fileset quartus_synth QUARTUS_SYNTH "" "Quartus Synthesis"
 set_fileset_property quartus_synth TOP_LEVEL axi_adrv9009
 add_fileset_file ad_rst.v                   VERILOG PATH $ad_hdl_dir/library/common/ad_rst.v
 add_fileset_file ad_mul.v                   VERILOG PATH $ad_hdl_dir/library/altera/common/ad_mul.v
+add_fileset_file ad_dds_cordic_pipe.v       VERILOG PATH $ad_hdl_dir/library/common/ad_dds_cordic_pipe.v
+add_fileset_file ad_dds_sine_cordic.v       VERILOG PATH $ad_hdl_dir/library/common/ad_dds_sine_cordic.v
 add_fileset_file ad_dds_sine.v              VERILOG PATH $ad_hdl_dir/library/common/ad_dds_sine.v
+add_fileset_file ad_dds_2.v                 VERILOG PATH $ad_hdl_dir/library/common/ad_dds_2.v
 add_fileset_file ad_dds_1.v                 VERILOG PATH $ad_hdl_dir/library/common/ad_dds_1.v
 add_fileset_file ad_dds.v                   VERILOG PATH $ad_hdl_dir/library/common/ad_dds.v
 add_fileset_file ad_datafmt.v               VERILOG PATH $ad_hdl_dir/library/common/ad_datafmt.v
@@ -52,6 +55,62 @@ set_parameter_property ID TYPE INTEGER
 set_parameter_property ID UNITS None
 set_parameter_property ID HDL_PARAMETER true
 
+add_parameter ADC_DATAPATH_DISABLE INTEGER 0
+set_parameter_property ADC_DATAPATH_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_DATAPATH_DISABLE DISPLAY_NAME ADC_DATAPATH_DISABLE
+set_parameter_property ADC_DATAPATH_DISABLE TYPE INTEGER
+set_parameter_property ADC_DATAPATH_DISABLE UNITS None
+set_parameter_property ADC_DATAPATH_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter ADC_DATAFORMAT_DISABLE INTEGER 0
+set_parameter_property ADC_DATAFORMAT_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_DATAFORMAT_DISABLE DISPLAY_NAME ADC_DATAFORMAT_DISABLE
+set_parameter_property ADC_DATAFORMAT_DISABLE TYPE INTEGER
+set_parameter_property ADC_DATAFORMAT_DISABLE UNITS None
+set_parameter_property ADC_DATAFORMAT_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter ADC_DCFILTER_DISABLE INTEGER 0
+set_parameter_property ADC_DCFILTER_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_DCFILTER_DISABLE DISPLAY_NAME ADC_DCFILTER_DISABLE
+set_parameter_property ADC_DCFILTER_DISABLE TYPE INTEGER
+set_parameter_property ADC_DCFILTER_DISABLE UNITS None
+set_parameter_property ADC_DCFILTER_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter ADC_IQCORRECTION_DISABLE INTEGER 0
+set_parameter_property ADC_IQCORRECTION_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_IQCORRECTION_DISABLE DISPLAY_NAME ADC_IQCORRECTION_DISABLE
+set_parameter_property ADC_IQCORRECTION_DISABLE TYPE INTEGER
+set_parameter_property ADC_IQCORRECTION_DISABLE UNITS None
+set_parameter_property ADC_IQCORRECTION_DISABLE HDL_PARAMETER true
+
+add_parameter ADC_OS_DATAPATH_DISABLE INTEGER 0
+set_parameter_property ADC_OS_DATAPATH_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_OS_DATAPATH_DISABLE DISPLAY_NAME ADC_OS_DATAPATH_DISABLE
+set_parameter_property ADC_OS_DATAPATH_DISABLE TYPE INTEGER
+set_parameter_property ADC_OS_DATAPATH_DISABLE UNITS None
+set_parameter_property ADC_OS_DATAPATH_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter ADC_OS_DATAFORMAT_DISABLE INTEGER 0
+set_parameter_property ADC_OS_DATAFORMAT_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_OS_DATAFORMAT_DISABLE DISPLAY_NAME ADC_OS_DATAFORMAT_DISABLE
+set_parameter_property ADC_OS_DATAFORMAT_DISABLE TYPE INTEGER
+set_parameter_property ADC_OS_DATAFORMAT_DISABLE UNITS None
+set_parameter_property ADC_OS_DATAFORMAT_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter ADC_OS_DCFILTER_DISABLE INTEGER 0
+set_parameter_property ADC_OS_DCFILTER_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_OS_DCFILTER_DISABLE DISPLAY_NAME ADC_OS_DCFILTER_DISABLE
+set_parameter_property ADC_OS_DCFILTER_DISABLE TYPE INTEGER
+set_parameter_property ADC_OS_DCFILTER_DISABLE UNITS None
+set_parameter_property ADC_OS_DCFILTER_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter ADC_OS_IQCORRECTION_DISABLE INTEGER 0
+set_parameter_property ADC_OS_IQCORRECTION_DISABLE DEFAULT_VALUE 0
+set_parameter_property ADC_OS_IQCORRECTION_DISABLE DISPLAY_NAME ADC_OS_IQCORRECTION_DISABLE
+set_parameter_property ADC_OS_IQCORRECTION_DISABLE TYPE INTEGER
+set_parameter_property ADC_OS_IQCORRECTION_DISABLE UNITS None
+set_parameter_property ADC_OS_IQCORRECTION_DISABLE HDL_PARAMETER true
+
 add_parameter DAC_DATAPATH_DISABLE INTEGER 0
 set_parameter_property DAC_DATAPATH_DISABLE DEFAULT_VALUE 0
 set_parameter_property DAC_DATAPATH_DISABLE DISPLAY_NAME DAC_DATAPATH_DISABLE
@@ -59,12 +118,19 @@ set_parameter_property DAC_DATAPATH_DISABLE TYPE INTEGER
 set_parameter_property DAC_DATAPATH_DISABLE UNITS None
 set_parameter_property DAC_DATAPATH_DISABLE HDL_PARAMETER true
 
-add_parameter ADC_DATAPATH_DISABLE INTEGER 0
-set_parameter_property ADC_DATAPATH_DISABLE DEFAULT_VALUE 0
-set_parameter_property ADC_DATAPATH_DISABLE DISPLAY_NAME ADC_DATAPATH_DISABLE
-set_parameter_property ADC_DATAPATH_DISABLE TYPE INTEGER
-set_parameter_property ADC_DATAPATH_DISABLE UNITS None
-set_parameter_property ADC_DATAPATH_DISABLE HDL_PARAMETER true
+ad_ip_parameter DAC_DDS_DISABLE INTEGER 0
+set_parameter_property DAC_DDS_DISABLE DEFAULT_VALUE 0
+set_parameter_property DAC_DDS_DISABLE DISPLAY_NAME DAC_DDS_DISABLE
+set_parameter_property DAC_DDS_DISABLE TYPE INTEGER
+set_parameter_property DAC_DDS_DISABLE UNITS None
+set_parameter_property DAC_DDS_DISABLE HDL_PARAMETER true
+
+ad_ip_parameter DAC_IQCORRECTION_DISABLE INTEGER 0
+set_parameter_property DAC_IQCORRECTION_DISABLE DEFAULT_VALUE 0
+set_parameter_property DAC_IQCORRECTION_DISABLE DISPLAY_NAME DAC_IQCORRECTION_DISABLE
+set_parameter_property DAC_IQCORRECTION_DISABLE TYPE INTEGER
+set_parameter_property DAC_IQCORRECTION_DISABLE UNITS None
+set_parameter_property DAC_IQCORRECTION_DISABLE HDL_PARAMETER true
 
 # axi4 slave
 
@@ -156,6 +222,22 @@ add_interface_port adc_os_ch_1  adc_os_data_q0    data     Output  32
 
 set_interface_property adc_os_ch_1 associatedClock if_adc_os_clk
 set_interface_property adc_os_ch_1 associatedReset none
+
+add_interface adc_os_ch_2 conduit end
+add_interface_port adc_os_ch_2  adc_os_enable_i1  enable   Output  1
+add_interface_port adc_os_ch_2  adc_os_valid_i1   valid    Output  1
+add_interface_port adc_os_ch_2  adc_os_data_i1    data     Output  32
+
+set_interface_property adc_os_ch_2 associatedClock if_adc_os_clk
+set_interface_property adc_os_ch_2 associatedReset none
+
+add_interface adc_os_ch_3 conduit end
+add_interface_port adc_os_ch_3  adc_os_enable_q1  enable   Output  1
+add_interface_port adc_os_ch_3  adc_os_valid_q1   valid    Output  1
+add_interface_port adc_os_ch_3  adc_os_data_q1    data     Output  32
+
+set_interface_property adc_os_ch_3 associatedClock if_adc_os_clk
+set_interface_property adc_os_ch_3 associatedReset none
 
 ad_alt_intf signal  adc_os_dovf      input   1 ovf
 

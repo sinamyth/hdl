@@ -37,15 +37,18 @@
 
 module axi_adrv9009_rx_os #(
 
-  parameter   DATAPATH_DISABLE = 0,
-  parameter   ID = 0) (
+  parameter   ID = 0,
+  parameter   DATAFORMAT_DISABLE = 0,
+  parameter   DCFILTER_DISABLE = 0,
+  parameter   IQCORRECTION_DISABLE = 0) (
 
   // adc interface
 
   output                  adc_os_rst,
   input                   adc_os_clk,
   input                   adc_os_valid,
-  input       [ 63:0]     adc_os_data,
+  input       [127:0]     adc_os_data,
+  output                  adc_r1_mode,
 
   // dma interface
 
@@ -55,6 +58,12 @@ module axi_adrv9009_rx_os #(
   output                  adc_os_enable_q0,
   output                  adc_os_valid_q0,
   output      [ 31:0]     adc_os_data_q0,
+  output                  adc_os_enable_i1,
+  output                  adc_os_valid_i1,
+  output      [ 31:0]     adc_os_data_i1,
+  output                  adc_os_enable_q1,
+  output                  adc_os_valid_q1,
+  output      [ 31:0]     adc_os_data_q1,
   input                   adc_os_dovf,
 
   // processor interface
@@ -70,6 +79,9 @@ module axi_adrv9009_rx_os #(
   output  reg [ 31:0]     up_rdata,
   output  reg             up_rack);
 
+  localparam  CONFIG =  (DATAFORMAT_DISABLE * 4) +
+                        (DCFILTER_DISABLE * 2) +
+                        (IQCORRECTION_DISABLE * 1);
 
   // internal registers
 
@@ -81,12 +93,14 @@ module axi_adrv9009_rx_os #(
 
   wire    [ 31:0]   adc_os_data_iq_i0_s;
   wire    [ 31:0]   adc_os_data_iq_q0_s;
-  wire    [  1:0]   up_adc_pn_err_s;
-  wire    [  1:0]   up_adc_pn_oos_s;
-  wire    [  1:0]   up_adc_or_s;
-  wire    [  2:0]   up_wack_s;
-  wire    [  2:0]   up_rack_s;
-  wire    [ 31:0]   up_rdata_s[0:2];
+  wire    [ 31:0]   adc_os_data_iq_i1_s;
+  wire    [ 31:0]   adc_os_data_iq_q1_s;
+  wire    [  3:0]   up_adc_pn_err_s;
+  wire    [  3:0]   up_adc_pn_oos_s;
+  wire    [  3:0]   up_adc_or_s;
+  wire    [  4:0]   up_wack_s;
+  wire    [  4:0]   up_rack_s;
+  wire    [ 31:0]   up_rdata_s[0:4];
 
   // processor read interface
 
@@ -104,7 +118,7 @@ module axi_adrv9009_rx_os #(
       up_status_or <= | up_adc_or_s;
       up_wack <= | up_wack_s;
       up_rack <= | up_rack_s;
-      up_rdata <= up_rdata_s[0] | up_rdata_s[1] | up_rdata_s[2];
+      up_rdata <= up_rdata_s[0] | up_rdata_s[1] | up_rdata_s[2] | up_rdata_s[3] | up_rdata_s[4] ;
     end
   end
 
@@ -114,7 +128,10 @@ module axi_adrv9009_rx_os #(
     .Q_OR_I_N (0),
     .COMMON_ID ('h21),
     .CHANNEL_ID (0),
-    .DATAPATH_DISABLE (DATAPATH_DISABLE),
+    .DISABLE (0),
+    .DATAFORMAT_DISABLE (DATAFORMAT_DISABLE),
+    .DCFILTER_DISABLE (DCFILTER_DISABLE),
+    .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
     .DATA_WIDTH (32))
   i_rx_os_channel_0 (
     .adc_clk (adc_os_clk),
@@ -146,7 +163,10 @@ module axi_adrv9009_rx_os #(
     .Q_OR_I_N (1),
     .COMMON_ID ('h21),
     .CHANNEL_ID (1),
-    .DATAPATH_DISABLE (DATAPATH_DISABLE),
+    .DISABLE (0),
+    .DATAFORMAT_DISABLE (DATAFORMAT_DISABLE),
+    .DCFILTER_DISABLE (DCFILTER_DISABLE),
+    .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
     .DATA_WIDTH (32))
   i_rx_os_channel_1 (
     .adc_clk (adc_os_clk),
@@ -172,16 +192,87 @@ module axi_adrv9009_rx_os #(
     .up_rdata (up_rdata_s[1]),
     .up_rack (up_rack_s[1]));
 
+  axi_adrv9009_rx_channel #(
+    .Q_OR_I_N (2),
+    .COMMON_ID ('h21),
+    .CHANNEL_ID (2),
+    .DISABLE (0),
+    .DATAFORMAT_DISABLE (DATAFORMAT_DISABLE),
+    .DCFILTER_DISABLE (DCFILTER_DISABLE),
+    .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
+    .DATA_WIDTH (32))
+  i_rx_os_channel_2 (
+    .adc_clk (adc_os_clk),
+    .adc_rst (adc_os_rst),
+    .adc_valid_in (adc_os_valid),
+    .adc_data_in (adc_os_data[95:64]),
+    .adc_valid_out (adc_os_valid_i1),
+    .adc_data_out (adc_os_data_i1),
+    .adc_data_iq_in (adc_os_data_iq_q1_s),
+    .adc_data_iq_out (adc_os_data_iq_i1_s),
+    .adc_enable (adc_os_enable_i1),
+    .up_adc_pn_err (up_adc_pn_err_s[2]),
+    .up_adc_pn_oos (up_adc_pn_oos_s[2]),
+    .up_adc_or (up_adc_or_s[2]),
+    .up_rstn (up_rstn),
+    .up_clk (up_clk),
+    .up_wreq (up_wreq),
+    .up_waddr (up_waddr),
+    .up_wdata (up_wdata),
+    .up_wack (up_wack_s[2]),
+    .up_rreq (up_rreq),
+    .up_raddr (up_raddr),
+    .up_rdata (up_rdata_s[2]),
+    .up_rack (up_rack_s[2]));
+
+  axi_adrv9009_rx_channel #(
+    .Q_OR_I_N (3),
+    .COMMON_ID ('h21),
+    .CHANNEL_ID (3),
+    .DISABLE (0),
+    .DATAFORMAT_DISABLE (DATAFORMAT_DISABLE),
+    .DCFILTER_DISABLE (DCFILTER_DISABLE),
+    .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
+    .DATA_WIDTH (32))
+  i_rx_os_channel_3 (
+    .adc_clk (adc_os_clk),
+    .adc_rst (adc_os_rst),
+    .adc_valid_in (adc_os_valid),
+    .adc_data_in (adc_os_data[127:96]),
+    .adc_valid_out (adc_os_valid_q1),
+    .adc_data_out (adc_os_data_q1),
+    .adc_data_iq_in (adc_os_data_iq_i1_s),
+    .adc_data_iq_out (adc_os_data_iq_q1_s),
+    .adc_enable (adc_os_enable_q1),
+    .up_adc_pn_err (up_adc_pn_err_s[3]),
+    .up_adc_pn_oos (up_adc_pn_oos_s[3]),
+    .up_adc_or (up_adc_or_s[3]),
+    .up_rstn (up_rstn),
+    .up_clk (up_clk),
+    .up_wreq (up_wreq),
+    .up_waddr (up_waddr),
+    .up_wdata (up_wdata),
+    .up_wack (up_wack_s[3]),
+    .up_rreq (up_rreq),
+    .up_raddr (up_raddr),
+    .up_rdata (up_rdata_s[3]),
+    .up_rack (up_rack_s[3]));
+
   // common processor control
 
   up_adc_common #(
+    .ID (ID),
     .COMMON_ID ('h20),
-    .ID (ID))
+    .CONFIG (CONFIG),
+    .DRP_DISABLE (1),
+    .USERPORTS_DISABLE (1),
+    .GPIO_DISABLE (1),
+    .START_CODE_DISABLE (1))
   i_up_adc_common (
     .mmcm_rst (),
     .adc_clk (adc_os_clk),
     .adc_rst (adc_os_rst),
-    .adc_r1_mode (),
+    .adc_r1_mode (adc_r1_mode),
     .adc_ddr_edgesel (),
     .adc_pin_mode (),
     .adc_status (1'b1),
@@ -214,11 +305,11 @@ module axi_adrv9009_rx_os #(
     .up_wreq (up_wreq),
     .up_waddr (up_waddr),
     .up_wdata (up_wdata),
-    .up_wack (up_wack_s[2]),
+    .up_wack (up_wack_s[4]),
     .up_rreq (up_rreq),
     .up_raddr (up_raddr),
-    .up_rdata (up_rdata_s[2]),
-    .up_rack (up_rack_s[2]));
+    .up_rdata (up_rdata_s[4]),
+    .up_rack (up_rack_s[4]));
 
 endmodule
 

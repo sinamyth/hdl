@@ -12,7 +12,10 @@ adi_ip_files axi_ad9361 [list \
   "$ad_hdl_dir/library/xilinx/common/ad_dcfilter.v" \
   "$ad_hdl_dir/library/xilinx/common/ad_mul.v" \
   "$ad_hdl_dir/library/common/ad_pnmon.v" \
+  "$ad_hdl_dir/library/common/ad_dds_cordic_pipe.v" \
+  "$ad_hdl_dir/library/common/ad_dds_sine_cordic.v" \
   "$ad_hdl_dir/library/common/ad_dds_sine.v" \
+  "$ad_hdl_dir/library/common/ad_dds_2.v" \
   "$ad_hdl_dir/library/common/ad_dds_1.v" \
   "$ad_hdl_dir/library/common/ad_dds.v" \
   "$ad_hdl_dir/library/common/ad_datafmt.v" \
@@ -90,7 +93,9 @@ set_property value s_axi [ipx::get_bus_parameters ASSOCIATED_BUSIF \
 ipx::infer_bus_interface clk xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
 ipx::infer_bus_interface l_clk xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
 ipx::infer_bus_interface delay_clk xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
-ipx::infer_bus_interface rst xilinx.com:signal:reset_rtl:1.0 [ipx::current_core]
+set reset_intf [ipx::infer_bus_interface rst xilinx.com:signal:reset_rtl:1.0 [ipx::current_core]]
+set reset_polarity [ipx::add_bus_parameter "POLARITY" $reset_intf]
+set_property value "ACTIVE_HIGH" $reset_polarity
 
 ipx::infer_bus_interface gps_pps_irq xilinx.com:signal:interrupt_rtl:1.0 [ipx::current_core]
 

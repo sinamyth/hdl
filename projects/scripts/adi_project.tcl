@@ -7,7 +7,7 @@ variable p_prcfg_list
 variable p_prcfg_status
 
 if {![info exists REQUIRED_VIVADO_VERSION]} {
-  set REQUIRED_VIVADO_VERSION "2017.4.1"
+  set REQUIRED_VIVADO_VERSION "2018.2"
 }
 
 if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {
@@ -78,7 +78,7 @@ proc adi_project_xilinx {project_name {mode 0}} {
   }
   if [regexp "_zcu102$" $project_name] {
     set p_device "xczu9eg-ffvb1156-2-e"
-    set p_board "xilinx.com:zcu102:part0:3.1"
+    set p_board "xilinx.com:zcu102:part0:3.2"
     set sys_zynq 2
   }
 
@@ -115,6 +115,12 @@ proc adi_project_xilinx {project_name {mode 0}} {
 
   ## Load custom message severity definitions
   source $ad_hdl_dir/projects/scripts/adi_xilinx_msg.tcl
+
+  ## In Vivado there is a limit for the number of warnings and errors which are
+  ## displayed by the tool for a particular error or warning; the default value
+  ## of this limit is 100.
+  ## Overrides the default limit to 2000.
+  set_param messaging.defaultLimit 2000
 
   create_bd_design "system"
   source system_bd.tcl

@@ -25,6 +25,12 @@ proc init {cellpath otherInfo} {
 		set_property "CONFIG.DMA_AXI_PROTOCOL_${dir}" $axi_protocol $ip
 		set_property "CONFIG.DMA_TYPE_${dir}" $old $ip
 	}
+
+  # Versions earlier than 2017.3 infer sub-optimal asymmetric memory
+  # See https://www.xilinx.com/support/answers/69179.html
+  if {[expr [join [lrange [split [version -short] .] 0 1] .] > 2017.2 ]} {
+    set_property "CONFIG.ALLOW_ASYM_MEM" 1 $ip
+  }
 }
 
 proc post_config_ip {cellpath otherinfo} {
@@ -149,7 +155,7 @@ proc post_propagate {cellpath otherinfo} {
 			foreach addr_seg $addr_segs {
 				set range [get_property "range" $addr_seg]
 				set offset [get_property "offset" $addr_seg]
-				set addr_width [expr max(round(log($range + $offset) / log(2)), $addr_width)]
+				set addr_width [expr max(int(ceil(log($range - 1 + $offset) / log(2))), $addr_width)]
 			}
 		} else {
 			set addr_width 32

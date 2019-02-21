@@ -171,7 +171,6 @@ module axi_dacfifo_wr #(
   wire                                      axi_waddr_ready_s;
   wire                                      axi_wready_s;
   wire                                      axi_partial_burst_s;
-  wire                                      axi_last_burst_s;
   wire                                      axi_xlast_s;
   wire                                      axi_reset_s;
 
@@ -189,6 +188,7 @@ module axi_dacfifo_wr #(
     .addra (dma_mem_waddr),
     .dina (dma_data),
     .clkb (axi_clk),
+    .reb (1'b1),
     .addrb (axi_mem_raddr),
     .doutb (axi_mem_rdata_s));
 

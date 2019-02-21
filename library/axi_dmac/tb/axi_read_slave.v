@@ -33,6 +33,8 @@
 // ***************************************************************************
 // ***************************************************************************
 
+`timescale 1ns/100ps
+
 module axi_read_slave #(
   parameter DATA_WIDTH = 32,
   parameter READ_ACCEPTANCE = 4,
@@ -60,18 +62,20 @@ module axi_read_slave #(
 
 reg [DATA_WIDTH-1:0] data = 'h00;
 
-assign rresp = 2'b00;
-//assign rdata = data;
+wire [31:0] beat_addr;
 
-always @(posedge clk) begin
-  if (reset == 1'b1) begin
-    data <= 'h00;
-  end else if (rvalid == 1'b1 && rready == 1'b1) begin
-    data <= data + 1'b1;
+assign rresp = 2'b00;
+assign rdata = data;
+
+always @(*) begin: gen_data
+  integer i;
+  for (i = 0; i < DATA_WIDTH; i = i + 8) begin
+    data[i+:8] <= beat_addr[7:0] + i / 8;
   end
 end
 
 axi_slave #(
+  .DATA_WIDTH(DATA_WIDTH),
   .ACCEPTANCE(READ_ACCEPTANCE),
   .MIN_LATENCY(MIN_LATENCY),
   .MAX_LATENCY(MAX_LATENCY)
@@ -91,7 +95,7 @@ axi_slave #(
   .beat_stb(rvalid),
   .beat_ack(rvalid & rready),
   .beat_last(rlast),
-  .beat_addr(rdata)
+  .beat_addr(beat_addr)
 );
 
 endmodule

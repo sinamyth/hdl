@@ -38,6 +38,9 @@
 module axi_ad9152 #(
 
   parameter   ID = 0,
+  parameter   DAC_DDS_TYPE = 1,
+  parameter   DAC_DDS_CORDIC_DW = 16,
+  parameter   DAC_DDS_CORDIC_PHASE_DW = 16,
   parameter   DAC_DATAPATH_DISABLE = 0) (
 
   // jesd interface
@@ -64,7 +67,7 @@ module axi_ad9152 #(
   input                   s_axi_aclk,
   input                   s_axi_aresetn,
   input                   s_axi_awvalid,
-  input       [ 15:0]     s_axi_awaddr,
+  input       [ 11:0]     s_axi_awaddr,
   input       [ 2:0]      s_axi_awprot,
   output                  s_axi_awready,
   input                   s_axi_wvalid,
@@ -75,7 +78,7 @@ module axi_ad9152 #(
   output      [ 1:0]      s_axi_bresp,
   input                   s_axi_bready,
   input                   s_axi_arvalid,
-  input       [ 15:0]     s_axi_araddr,
+  input       [ 11:0]     s_axi_araddr,
   input       [ 2:0]      s_axi_arprot,
   output                  s_axi_arready,
   output                  s_axi_rvalid,
@@ -89,7 +92,13 @@ module axi_ad9152 #(
     .ID(ID),
     .NUM_LANES(4),
     .NUM_CHANNELS(2),
-    .DAC_DATAPATH_DISABLE(DAC_DATAPATH_DISABLE)
+    .CONVERTER_RESOLUTION (16),
+    .BITS_PER_SAMPLE (16),
+    .SAMPLES_PER_FRAME (1),
+    .DDS_TYPE (DAC_DDS_TYPE),
+    .DDS_CORDIC_DW (DAC_DDS_CORDIC_DW),
+    .DDS_CORDIC_PHASE_DW (DAC_DDS_CORDIC_PHASE_DW),
+    .DATAPATH_DISABLE(DAC_DATAPATH_DISABLE)
   ) i_dac_jesd204 (
     .link_clk (tx_clk),
 

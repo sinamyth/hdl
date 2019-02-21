@@ -16,9 +16,7 @@ add_fileset quartus_synth QUARTUS_SYNTH "" "Quartus Synthesis"
 set_fileset_property quartus_synth TOP_LEVEL axi_hdmi_tx
 add_fileset_file ad_mem.v                 VERILOG PATH $ad_hdl_dir/library/common/ad_mem.v
 add_fileset_file ad_rst.v                 VERILOG PATH $ad_hdl_dir/library/common/ad_rst.v
-add_fileset_file ad_csc_1_mul.v           VERILOG PATH $ad_hdl_dir/library/common/ad_csc_1_mul.v
-add_fileset_file ad_csc_1_add.v           VERILOG PATH $ad_hdl_dir/library/common/ad_csc_1_add.v
-add_fileset_file ad_csc_1.v               VERILOG PATH $ad_hdl_dir/library/common/ad_csc_1.v
+add_fileset_file ad_csc.v                 VERILOG PATH $ad_hdl_dir/library/common/ad_csc.v
 add_fileset_file ad_csc_RGB2CrYCb.v       VERILOG PATH $ad_hdl_dir/library/common/ad_csc_RGB2CrYCb.v
 add_fileset_file ad_ss_444to422.v         VERILOG PATH $ad_hdl_dir/library/common/ad_ss_444to422.v
 add_fileset_file up_axi.v                 VERILOG PATH $ad_hdl_dir/library/common/up_axi.v
@@ -98,14 +96,7 @@ add_interface_port hdmi_if hdmi_36_data h36_data Output 36
 add_interface vdma_clock  clock end
 add_interface_port vdma_clock vdma_clk clk Input 1
 
-add_interface vdma_if avalon_streaming end
-set_interface_property vdma_if associatedClock vdma_clock
-add_interface_port vdma_if vdma_valid valid Input 1
-add_interface_port vdma_if vdma_data data Input 64
-add_interface_port vdma_if vdma_ready ready Output 1
-
-# frame sync
-
-ad_alt_intf signal  vdma_fs       output  1
-ad_alt_intf signal  vdma_fs_ret   input   1
-
+ad_alt_intf signal vdma_ready         output  1  ready
+ad_alt_intf signal vdma_valid         input   1  valid
+ad_alt_intf signal vdma_data          input   64 data
+ad_alt_intf signal vdma_end_of_frame  input   1  last

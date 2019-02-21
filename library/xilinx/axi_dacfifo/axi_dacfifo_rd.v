@@ -105,13 +105,7 @@ module axi_dacfifo_rd #(
 
   // internal registers
 
-  reg                                   axi_ractive = 1'b0;
-  reg     [ 1:0]                        axi_xfer_req_m = 2'b0;
-  reg     [ 7:0]                        axi_last_beats_cntr = 8'b0;
   reg                                   axi_data_req = 1'b0;
-  reg     [(AXI_DATA_WIDTH-1):0]        axi_ddata = 'b0;
-  reg                                   axi_dlast = 1'b0;
-  reg                                   axi_dvalid = 1'b0;
   reg     [ 4:0]                        axi_read_state = 5'b0;
   reg     [(AXI_MEM_ADDRESS_WIDTH-1):0] axi_mem_waddr = 'd0;
   reg     [(AXI_MEM_ADDRESS_WIDTH-1):0] axi_mem_laddr = 'd0;
@@ -136,9 +130,6 @@ module axi_dacfifo_rd #(
   reg     [ 2:0]                        dac_xfer_req_m = 3'b0;
   reg     [ 3:0]                        dac_last_beats = 4'b0;
   reg     [ 3:0]                        dac_last_beats_m = 4'b0;
-  reg                                   dac_dlast = 1'b0;
-  reg                                   dac_dlast_m1 = 1'b0;
-  reg                                   dac_dlast_m2 = 1'b0;
 
   // internal signals
 
@@ -150,12 +141,10 @@ module axi_dacfifo_rd #(
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] axi_mem_waddr_s;
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] axi_mem_laddr_s;
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] axi_mem_waddr_b2g_s;
-  wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] axi_mem_laddr_b2g_s;
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] axi_mem_raddr_m2_g2b_s;
 
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] dac_mem_raddr_b2g_s;
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] dac_mem_waddr_m2_g2b_s;
-  wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] dac_mem_laddr_m2_g2b_s;
   wire    [    DAC_MEM_ADDRESS_WIDTH:0] dac_mem_addr_diff_s;
   wire    [(DAC_MEM_ADDRESS_WIDTH-1):0] dac_mem_laddr_s;
 
@@ -173,6 +162,7 @@ module axi_dacfifo_rd #(
     .addra (axi_mem_waddr),
     .dina (axi_rdata),
     .clkb (dac_clk),
+    .reb (1'b1),
     .addrb (dac_mem_raddr),
     .doutb (dac_data));
 
@@ -369,9 +359,6 @@ module axi_dacfifo_rd #(
       dac_mem_waddr_m2 <= 'b0;
       dac_mem_laddr_toggle_m <= 4'b0;
       dac_mem_laddr <= 'b0;
-      dac_dlast <= 1'b0;
-      dac_dlast_m1 <= 1'b0;
-      dac_dlast_m2 <= 1'b0;
     end else begin
       dac_mem_waddr_m1 <= axi_mem_waddr_g;
       dac_mem_waddr_m2 <= dac_mem_waddr_m1;
@@ -380,9 +367,6 @@ module axi_dacfifo_rd #(
       dac_mem_laddr <= (dac_mem_laddr_toggle_m[2] ^ dac_mem_laddr_toggle_m[1]) ?
                                                       axi_mem_laddr_s :
                                                       dac_mem_laddr;
-      dac_dlast_m1 <= axi_dlast;
-      dac_dlast_m2 <= dac_dlast_m1;
-      dac_dlast <= dac_dlast_m2;
     end
   end
 
@@ -450,11 +434,11 @@ module axi_dacfifo_rd #(
     end else begin
       dac_mem_laddr_b <= dac_mem_laddr_s;
       if (dac_mem_valid == 1'b1) begin
-        if ((dac_last_beats > 0) &&
+        if ((dac_last_beats != 0) &&
             (dac_mem_raddr == (dac_mem_laddr_b + dac_last_beats - 1))) begin
           dac_mem_raddr <= dac_mem_raddr + (MEM_RATIO - (dac_last_beats - 1));
         end else begin
-          dac_mem_raddr <= dac_mem_raddr + 1;
+          dac_mem_raddr <= dac_mem_raddr + 1'b1;
         end
       end
       dac_mem_raddr_g <= dac_mem_raddr_b2g_s;

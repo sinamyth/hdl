@@ -139,7 +139,7 @@ module system_top (
   assign gpio_i[63:61] = gpio_o[63:61];
 
   assign dac_fifo_bypass = gpio_o[60];
-  assign gpio_i[60:60] = gpio_o[60];
+  assign gpio_i[60:60] = gpio_o[60:60];
 
   assign ad9528_reset_b = gpio_o[59];
   assign ad9528_sysref_req = gpio_o[58];
@@ -165,7 +165,7 @@ module system_top (
 
   assign gpio_i[31:27] = gpio_o[31:27];
   assign gpio_i[26:16] = gpio_bd_i;
-  assign gpio_i[15: 0] = gpio_o[15:0];
+  assign gpio_i[15: 0] = gpio_o[15: 0];
 
   assign gpio_bd_o = gpio_o[15:0];
 

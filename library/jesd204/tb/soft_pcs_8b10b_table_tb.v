@@ -42,6 +42,8 @@
 // is copyright © 2016-2017, Analog Devices, Inc.”
 //
 
+`timescale 1ns/100ps
+
 module soft_pcs_8b10b_table_tb;
   parameter VCD_FILE = "soft_pcs_8b10b_table_tb.vcd";
 
@@ -67,6 +69,9 @@ module soft_pcs_8b10b_table_tb;
 
   reg build_k28 = 1'b0;
   reg build_table = 1'b1;
+
+  reg decoder_disparity = 1'b0;
+  wire decoder_disparity_s;
 
   always @(posedge clk) begin
     counter <= counter + 1'b1;
@@ -116,9 +121,6 @@ module soft_pcs_8b10b_table_tb;
       end
     end
   end
-
-  reg decoder_disparity = 1'b0;
-  wire decoder_disparity_s;
 
   always @(posedge clk) begin
   end

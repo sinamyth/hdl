@@ -42,6 +42,8 @@
 // is copyright © 2016-2017, Analog Devices, Inc.”
 //
 
+`timescale 1ns/100ps
+
 module jesd204_up_common # (
   parameter PCORE_VERSION = 0,
   parameter PCORE_MAGIC = 0,
@@ -90,6 +92,13 @@ module jesd204_up_common # (
 localparam MAX_BEATS_PER_MULTIFRAME = (MAX_OCTETS_PER_FRAME * 32) / DATA_PATH_WIDTH;
 
 reg [31:0] up_scratch = 32'h00000000;
+
+reg [7:0] up_cfg_octets_per_frame = 'h00;
+reg [9-DATA_PATH_WIDTH:0] up_cfg_beats_per_multiframe = 'h00;
+reg [NUM_LANES-1:0] up_cfg_lanes_disable = {NUM_LANES{1'b0}};
+reg [NUM_LINKS-1:0] up_cfg_links_disable = {NUM_LINKS{1'b0}};
+reg up_cfg_disable_char_replacement = 1'b0;
+reg up_cfg_disable_scrambler = 1'b0;
 
 /* Reset for the register map */
 reg [2:0] up_reset_vector = 3'b111;
@@ -192,12 +201,6 @@ always @(posedge up_clk) begin
   end
 end
 
-reg [7:0] up_cfg_octets_per_frame = 'h00;
-reg [9-DATA_PATH_WIDTH:0] up_cfg_beats_per_multiframe = 'h00;
-reg [NUM_LANES-1:0] up_cfg_lanes_disable = {NUM_LANES{1'b0}};
-reg [NUM_LINKS-1:0] up_cfg_links_disable = {NUM_LINKS{1'b0}};
-reg up_cfg_disable_char_replacement = 1'b0;
-reg up_cfg_disable_scrambler = 1'b0;
 
 wire [20:0] clk_mon_count;
 

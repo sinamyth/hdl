@@ -40,20 +40,23 @@ module axi_adrv9009_rx_channel #(
   parameter   Q_OR_I_N = 0,
   parameter   COMMON_ID = 0,
   parameter   CHANNEL_ID = 0,
-  parameter   DATAPATH_DISABLE = 0,
+  parameter   DISABLE = 0,
+  parameter   DATAFORMAT_DISABLE = 0,
+  parameter   DCFILTER_DISABLE = 0,
+  parameter   IQCORRECTION_DISABLE = 0,
   parameter   DATA_WIDTH = 32) (
 
   // adc interface
 
-  input                   adc_clk,
-  input                   adc_rst,
-  input                   adc_valid_in,
+  input                           adc_clk,
+  input                           adc_rst,
+  input                           adc_valid_in,
   input       [(DATA_WIDTH-1):0]  adc_data_in,
-  output                  adc_valid_out,
+  output                          adc_valid_out,
   output      [(DATA_WIDTH-1):0]  adc_data_out,
   input       [(DATA_WIDTH-1):0]  adc_data_iq_in,
   output      [(DATA_WIDTH-1):0]  adc_data_iq_out,
-  output                  adc_enable,
+  output                          adc_enable,
 
   // channel interface
 
@@ -107,7 +110,7 @@ module axi_adrv9009_rx_channel #(
 
   generate
   for (n = 0; n < NUM_OF_SAMPLES; n = n + 1) begin: g_datafmt
-  if (DATAPATH_DISABLE == 1) begin
+  if (DISABLE == 1 || DATAFORMAT_DISABLE == 1) begin
   assign adc_dfmt_valid_s[n] = adc_valid_in;
   assign adc_dfmt_data_s[((16*n)+15):(16*n)] = adc_data_in[((16*n)+15):(16*n)];
   end else begin
@@ -126,7 +129,7 @@ module axi_adrv9009_rx_channel #(
 
   generate
   for (n = 0; n < NUM_OF_SAMPLES; n = n + 1) begin: g_dcfilter
-  if (DATAPATH_DISABLE == 1) begin
+  if (DISABLE == 1 || DCFILTER_DISABLE == 1) begin
   assign adc_dcfilter_valid_s[n] = adc_dfmt_valid_s[n];
   assign adc_dcfilter_data_s[((16*n)+15):(16*n)] = adc_dfmt_data_s[((16*n)+15):(16*n)];
   end else begin
@@ -148,7 +151,7 @@ module axi_adrv9009_rx_channel #(
 
   generate
   for (n = 0; n < NUM_OF_SAMPLES; n = n + 1) begin: g_iqcor
-  if (DATAPATH_DISABLE == 1) begin
+  if (DISABLE == 1 || IQCORRECTION_DISABLE == 1) begin
   assign adc_valid_out_s[n] = adc_dcfilter_valid_s[n];
   assign adc_data_out[((16*n)+15):(16*n)] = adc_dcfilter_data_s[((16*n)+15):(16*n)];
   end else begin
@@ -170,9 +173,9 @@ module axi_adrv9009_rx_channel #(
     .COMMON_ID (COMMON_ID),
     .CHANNEL_ID (CHANNEL_ID),
     .USERPORTS_DISABLE(1),
-    .DATAFORMAT_DISABLE(DATAPATH_DISABLE),
-    .DCFILTER_DISABLE(DATAPATH_DISABLE),
-    .IQCORRECTION_DISABLE(DATAPATH_DISABLE))
+    .DATAFORMAT_DISABLE(DATAFORMAT_DISABLE),
+    .DCFILTER_DISABLE(DCFILTER_DISABLE),
+    .IQCORRECTION_DISABLE(IQCORRECTION_DISABLE))
   i_up_adc_channel (
     .adc_clk (adc_clk),
     .adc_rst (adc_rst),

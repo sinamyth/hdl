@@ -15,9 +15,13 @@ set_module_property ELABORATION_CALLBACK p_axi_ad9144
 
 ad_ip_files axi_ad9144 [list \
   $ad_hdl_dir/library/altera/common/ad_mul.v \
+  $ad_hdl_dir/library/common/ad_dds_cordic_pipe.v \
+  $ad_hdl_dir/library/common/ad_dds_sine_cordic.v \
   $ad_hdl_dir/library/common/ad_dds_sine.v \
+  $ad_hdl_dir/library/common/ad_dds_2.v \
   $ad_hdl_dir/library/common/ad_dds_1.v \
   $ad_hdl_dir/library/common/ad_dds.v \
+  $ad_hdl_dir/library/common/ad_perfect_shuffle.v \
   $ad_hdl_dir/library/common/ad_rst.v \
   $ad_hdl_dir/library/common/up_axi.v \
   $ad_hdl_dir/library/common/up_xfer_cntrl.v \
@@ -30,7 +34,9 @@ ad_ip_files axi_ad9144 [list \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_channel.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_core.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_framer.v \
+  $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_pn.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_regmap.v \
+  $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_common/up_tpl_common.v \
   \
   axi_ad9144.v \
   $ad_hdl_dir/library/altera/common/up_xfer_cntrl_constr.sdc \
@@ -57,7 +63,7 @@ set_parameter_property QUAD_OR_DUAL_N HDL_PARAMETER true
 
 # axi4 slave
 
-ad_ip_intf_s_axi s_axi_aclk s_axi_aresetn
+ad_ip_intf_s_axi s_axi_aclk s_axi_aresetn 12
 
 # transceiver interface
 

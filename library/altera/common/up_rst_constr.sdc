@@ -1,2 +1,4 @@
 
-set_false_path  -from [get_registers *up_*preset*]                                    -to [get_registers *ad_rst:i_core_rst_reg|ad_rst_sync_m1*]
+set_false_path  -to [get_pins -hierarchical -nocase rst_async_d*|CLRN]
+set_false_path  -to [get_pins -hierarchical -nocase rst_sync|CLRN]
+

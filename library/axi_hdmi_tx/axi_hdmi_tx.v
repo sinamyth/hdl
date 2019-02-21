@@ -33,12 +33,14 @@
 // ***************************************************************************
 // ***************************************************************************
 
+`timescale 1ns/100ps
+
 module axi_hdmi_tx #(
 
   parameter   ID = 0,
   parameter   CR_CB_N = 0,
   parameter   DEVICE_TYPE = 0,
-  parameter   EMBEDDED_SYNC = 0,
+  parameter   INTERFACE = "16_BIT",
   parameter   OUT_CLK_POLARITY = 0) (
 
   // hdmi interface
@@ -71,8 +73,7 @@ module axi_hdmi_tx #(
   // vdma interface
 
   input                   vdma_clk,
-  output                  vdma_fs,
-  input                   vdma_fs_ret,
+  input                   vdma_end_of_frame,
   input                   vdma_valid,
   input       [63:0]      vdma_data,
   output                  vdma_ready,
@@ -103,6 +104,7 @@ module axi_hdmi_tx #(
 
   /* 0 = Launch on rising edge, 1 = Launch on falling edge */
 
+  localparam  EMBEDDED_SYNC = (INTERFACE == "16_BIT_EMBEDDED_SYNC") ? 1 : 0;
   localparam  XILINX_7SERIES = 0;
   localparam  XILINX_ULTRASCALE = 1;
   localparam  ALTERA_5SERIES = 16;
@@ -236,11 +238,10 @@ module axi_hdmi_tx #(
     .hdmi_raddr_g (hdmi_raddr_g_s),
     .vdma_clk (vdma_clk),
     .vdma_rst (vdma_rst),
-    .vdma_fs (vdma_fs),
-    .vdma_fs_ret (vdma_fs_ret),
     .vdma_valid (vdma_valid),
     .vdma_data (vdma_data),
     .vdma_ready (vdma_ready),
+    .vdma_end_of_frame (vdma_end_of_frame),
     .vdma_wr (vdma_wr_s),
     .vdma_waddr (vdma_waddr_s),
     .vdma_wdata (vdma_wdata_s),

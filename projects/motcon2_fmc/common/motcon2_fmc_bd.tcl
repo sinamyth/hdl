@@ -54,16 +54,12 @@
     #common reset
   create_bd_port -dir O eth_phy_rst_n
     # reference clock for the delay interface used for the gmii to rgmii conversion
-  create_bd_port -dir o -type clk refclk
-  create_bd_port -dir o -from 0 -to 0 -type rst refclk_rst
-
   # iic
   create_bd_intf_port -mode Master -vlnv xilinx.com:interface:iic_rtl:1.0  iic_ee2
 
   # xadc interface
   create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 vaux0
   create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 vaux8
-  create_bd_port -dir O -from 4 -to 0 muxaddr_out
 
 
   # core instantiation and configuration
@@ -75,6 +71,8 @@
   ad_ip_parameter sys_ps7 CONFIG.PCW_ENET0_ENET0_IO EMIO
   ad_ip_parameter sys_ps7 CONFIG.PCW_ENET0_GRP_MDIO_IO EMIO
   ad_ip_parameter sys_ps7 CONFIG.PCW_ENET1_PERIPHERAL_ENABLE 1
+  ad_ip_parameter sys_ps7 CONFIG.PCW_ENET1_GRP_MDIO_ENABLE 1
+  ad_ip_parameter sys_ps7 CONFIG.PCW_ENET1_GRP_MDIO_IO EMIO
 
   # Add additional clocks to be used by gmii to rgmii modules and current monitoring modules
   ad_ip_parameter sys_audio_clkgen CONFIG.CLKOUT2_USED true
@@ -101,6 +99,7 @@
   ad_ip_parameter speed_detector_m1_dma CONFIG.DMA_DATA_WIDTH_DEST 64
   ad_ip_parameter speed_detector_m1_dma CONFIG.DMA_DATA_WIDTH_SRC 32
   ad_ip_parameter speed_detector_m1_dma CONFIG.DMA_AXI_PROTOCOL_DEST 0
+  ad_ip_parameter speed_detector_m1_dma CONFIG.AXI_SLICE_SRC 1
     # speed detector core motor 2
   ad_ip_instance axi_mc_speed speed_detector_m2
     # dma motor 2
@@ -112,6 +111,7 @@
   ad_ip_parameter speed_detector_m2_dma CONFIG.DMA_DATA_WIDTH_DEST 64
   ad_ip_parameter speed_detector_m2_dma CONFIG.DMA_DATA_WIDTH_SRC 32
   ad_ip_parameter speed_detector_m2_dma CONFIG.DMA_AXI_PROTOCOL_DEST 0
+  ad_ip_parameter speed_detector_m2_dma CONFIG.AXI_SLICE_SRC 1
 
   # current monitor peripherals
     # current monitor core motor 1
@@ -122,11 +122,13 @@
   ad_ip_parameter current_monitor_m1_dma CONFIG.DMA_2D_TRANSFER 0
   ad_ip_parameter current_monitor_m1_dma CONFIG.CYCLIC 0
   ad_ip_parameter current_monitor_m1_dma CONFIG.DMA_AXI_PROTOCOL_DEST 0
+  ad_ip_parameter current_monitor_m1_dma CONFIG.SYNC_TRANSFER_START true
     # data packer motor 1
   #
-  ad_ip_instance util_cpack current_monitor_m1_pack
-  ad_ip_parameter current_monitor_m1_pack CONFIG.NUM_OF_CHANNELS 4
-  ad_ip_parameter current_monitor_m1_pack CONFIG.CHANNEL_DATA_WIDTH 16
+  ad_ip_instance util_cpack2 current_monitor_m1_pack { \
+    NUM_OF_CHANNELS 3 \
+    SAMPLE_DATA_WIDTH 16 \
+  }
 
     # current monitor core motor 2
   ad_ip_instance axi_mc_current_monitor current_monitor_m2
@@ -136,10 +138,12 @@
   ad_ip_parameter current_monitor_m2_dma CONFIG.DMA_2D_TRANSFER 0
   ad_ip_parameter current_monitor_m2_dma CONFIG.CYCLIC 0
   ad_ip_parameter current_monitor_m2_dma CONFIG.DMA_AXI_PROTOCOL_DEST 0
+  ad_ip_parameter current_monitor_m2_dma CONFIG.SYNC_TRANSFER_START true
     # data packer motor 2
-  ad_ip_instance util_cpack current_monitor_m2_pack
-  ad_ip_parameter current_monitor_m2_pack CONFIG.NUM_OF_CHANNELS 4
-  ad_ip_parameter current_monitor_m2_pack CONFIG.CHANNEL_DATA_WIDTH 16
+  ad_ip_instance util_cpack2 current_monitor_m2_pack { \
+    NUM_OF_CHANNELS 3 \
+    SAMPLE_DATA_WIDTH 16 \
+  }
 
   #controller
     # controller core motor 1
@@ -207,26 +211,20 @@
   ad_connect adc_m1_vbus_dat_i current_monitor_m1/adc_vbus_dat_i
 
 
-  ad_connect sys_cpu_clk   current_monitor_m1_pack/adc_clk
-  ad_connect sys_cpu_reset current_monitor_m1_pack/adc_rst
+  ad_connect sys_cpu_clk   current_monitor_m1_pack/clk
+  ad_connect sys_cpu_reset current_monitor_m1_pack/reset
 
-  ad_connect current_monitor_m1/adc_enable_ia     current_monitor_m1_pack/adc_enable_0
-  ad_connect current_monitor_m1/adc_enable_ib     current_monitor_m1_pack/adc_enable_1
-  ad_connect current_monitor_m1/adc_enable_vbus   current_monitor_m1_pack/adc_enable_2
-  ad_connect current_monitor_m1_pack/adc_valid_0 current_monitor_m1/i_ready_o
-  ad_connect current_monitor_m1_pack/adc_valid_1 current_monitor_m1/i_ready_o
-  ad_connect current_monitor_m1_pack/adc_valid_2 current_monitor_m1/i_ready_o
-  ad_connect current_monitor_m1/ia_o current_monitor_m1_pack/adc_data_0
-  ad_connect current_monitor_m1/ib_o current_monitor_m1_pack/adc_data_1
-  ad_connect current_monitor_m1/vbus_o current_monitor_m1_pack/adc_data_2
-  ad_connect current_monitor_m1_pack/adc_data current_monitor_m1_dma/fifo_wr_din
-  ad_connect current_monitor_m1_pack/adc_valid current_monitor_m1_dma/fifo_wr_en
+  ad_connect current_monitor_m1/adc_enable_ia     current_monitor_m1_pack/enable_0
+  ad_connect current_monitor_m1/adc_enable_ib     current_monitor_m1_pack/enable_1
+  ad_connect current_monitor_m1/adc_enable_vbus   current_monitor_m1_pack/enable_2
+  ad_connect current_monitor_m1/i_ready_o         current_monitor_m1_pack/fifo_wr_en
+  ad_connect current_monitor_m1/ia_o              current_monitor_m1_pack/fifo_wr_data_0
+  ad_connect current_monitor_m1/ib_o              current_monitor_m1_pack/fifo_wr_data_1
+  ad_connect current_monitor_m1/vbus_o            current_monitor_m1_pack/fifo_wr_data_2
 
-  ad_connect current_monitor_m1_pack/adc_enable_3 GND
-  ad_connect current_monitor_m1_pack/adc_valid_3  GND
-  ad_connect current_monitor_m1_pack/adc_data_3   GND
+  ad_connect current_monitor_m1_pack/packed_fifo_wr current_monitor_m1_dma/fifo_wr
 
-    # motor 2
+  # motor 2
   ad_connect  sys_cpu_clk current_monitor_m2/ref_clk
 
   ad_connect  sys_cpu_clk current_monitor_m2_dma/fifo_wr_clk
@@ -236,24 +234,18 @@
   ad_connect  adc_m2_ib_dat_i  current_monitor_m2/adc_ib_dat_i
   ad_connect  adc_m2_vbus_dat_i current_monitor_m2/adc_vbus_dat_i
 
-  ad_connect sys_cpu_clk current_monitor_m2_pack/adc_clk
-  ad_connect sys_cpu_reset current_monitor_m2_pack/adc_rst
+  ad_connect sys_cpu_clk current_monitor_m2_pack/clk
+  ad_connect sys_cpu_reset current_monitor_m2_pack/reset
 
-  ad_connect current_monitor_m2/adc_enable_ia     current_monitor_m2_pack/adc_enable_0
-  ad_connect current_monitor_m2/adc_enable_ib     current_monitor_m2_pack/adc_enable_1
-  ad_connect current_monitor_m2/adc_enable_vbus   current_monitor_m2_pack/adc_enable_2
-  ad_connect current_monitor_m2_pack/adc_valid_0  current_monitor_m2/i_ready_o
-  ad_connect current_monitor_m2_pack/adc_valid_1  current_monitor_m2/i_ready_o
-  ad_connect current_monitor_m2_pack/adc_valid_2  current_monitor_m2/i_ready_o
-  ad_connect current_monitor_m2/ia_o              current_monitor_m2_pack/adc_data_0
-  ad_connect current_monitor_m2/ib_o              current_monitor_m2_pack/adc_data_1
-  ad_connect current_monitor_m2/vbus_o            current_monitor_m2_pack/adc_data_2
-  ad_connect current_monitor_m2_pack/adc_valid    current_monitor_m2_dma/fifo_wr_en
-  ad_connect current_monitor_m2_pack/adc_data     current_monitor_m2_dma/fifo_wr_din
+  ad_connect current_monitor_m2/adc_enable_ia     current_monitor_m2_pack/enable_0
+  ad_connect current_monitor_m2/adc_enable_ib     current_monitor_m2_pack/enable_1
+  ad_connect current_monitor_m2/adc_enable_vbus   current_monitor_m2_pack/enable_2
+  ad_connect current_monitor_m2/i_ready_o         current_monitor_m2_pack/fifo_wr_en
+  ad_connect current_monitor_m2/ia_o              current_monitor_m2_pack/fifo_wr_data_0
+  ad_connect current_monitor_m2/ib_o              current_monitor_m2_pack/fifo_wr_data_1
+  ad_connect current_monitor_m2/vbus_o            current_monitor_m2_pack/fifo_wr_data_2
 
-  ad_connect current_monitor_m2_pack/adc_enable_3 GND
-  ad_connect current_monitor_m2_pack/adc_valid_3  GND
-  ad_connect current_monitor_m2_pack/adc_data_3   GND
+  ad_connect current_monitor_m2_pack/packed_fifo_wr current_monitor_m2_dma/fifo_wr
 
   #controller
     # motor 1
@@ -270,6 +262,7 @@
 
   ad_connect controller_m1/sensors_o          speed_detector_m1/hall_bemf_i
   ad_connect controller_m1/position_i         speed_detector_m1/position_o
+  ad_connect controller_m1/gpo_o              gpo_o
 
   ad_connect controller_m1/pwm_a_i GND
   ad_connect controller_m1/pwm_b_i GND
@@ -295,8 +288,6 @@
 
   # ethernet
 
-  ad_connect sys_200m_clk refclk
-  ad_connect sys_cpu_resetn refclk_rst
   ad_connect sys_cpu_resetn eth_phy_rst_n
   ad_connect sys_ps7/ENET0_MDIO_MDC eth_mdio_mdc
   ad_connect sys_ps7/ENET0_MDIO_O eth_mdio_o
@@ -329,7 +320,6 @@
   # xadc
   ad_connect xadc_core/Vaux0 vaux0
   ad_connect xadc_core/Vaux8 vaux8
-  ad_connect muxaddr_out xadc_core/muxaddr_out
 
   # iic
   ad_connect iic_ee2/IIC iic_ee2

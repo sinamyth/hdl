@@ -164,12 +164,12 @@ module system_top (
   assign dac_txen = gpio_o[41];
   assign dac_reset = gpio_o[40];
 
-  assign gpio_i[39:39] = gpio_o[39];
+  assign gpio_i[39:39] = gpio_o[39:39];
 
-  assign gpio_i[38:38] = gpio_o[38];
+  assign gpio_i[38:38] = gpio_o[38:38];
   assign clkd_sync = gpio_o[38];
 
-  assign gpio_i[37:37] = gpio_o[37];
+  assign gpio_i[37:37] = gpio_o[37:37];
   assign gpio_i[36:36] = adc_fdb;
   assign gpio_i[35:35] = adc_fda;
   assign gpio_i[34:34] = dac_irq;
@@ -185,7 +185,7 @@ module system_top (
 
   assign gpio_i[31:27] = gpio_o[31:27];
   assign gpio_i[26:16] = gpio_bd_i;
-  assign gpio_i[15: 0] = gpio_o[15:0];
+  assign gpio_i[15: 0] = gpio_o[15: 0];
 
   assign gpio_bd_o = gpio_o[15:0];
 

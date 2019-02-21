@@ -42,6 +42,8 @@
 // is copyright © 2016-2017, Analog Devices, Inc.”
 //
 
+`timescale 1ns/100ps
+
 module loopback_tb;
   parameter VCD_FILE = "loopback_tb.vcd";
   parameter NUM_LANES = 4;
@@ -66,6 +68,7 @@ module loopback_tb;
   wire rx_valid;
   wire [NUM_LANES*32-1:0] rx_data;
   reg data_mismatch = 1'b1;
+  wire [NUM_LINKS-1:0] sync;
 
   always @(posedge clk) begin
     if (sync == 1'b0) begin
@@ -96,7 +99,6 @@ module loopback_tb;
   wire [NUM_LANES*4-1:0] phy_charisk_out;
   wire [NUM_LANES*32-1:0] phy_data_in;
   wire [NUM_LANES*4-1:0] phy_charisk_in;
-  wire [NUM_LINKS-1:0] sync;
 
   reg [5:0] sysref_counter = 'h00;
   reg sysref_rx = 1'b0;
@@ -217,6 +219,7 @@ module loopback_tb;
   );
 
   wire [NUM_LANES-1:0] rx_cfg_lanes_disable;
+  wire [NUM_LINKS-1:0] rx_cfg_links_disable;
   wire [7:0] rx_cfg_beats_per_multiframe;
   wire [7:0] rx_cfg_octets_per_frame;
   wire [7:0] rx_cfg_lmfc_offset;
@@ -239,6 +242,7 @@ module loopback_tb;
     .clk(clk),
 
     .cfg_lanes_disable(rx_cfg_lanes_disable),
+    .cfg_links_disable(rx_cfg_links_disable),
     .cfg_beats_per_multiframe(rx_cfg_beats_per_multiframe),
     .cfg_octets_per_frame(rx_cfg_octets_per_frame),
     .cfg_lmfc_offset(rx_cfg_lmfc_offset),
@@ -257,6 +261,7 @@ module loopback_tb;
     .reset(reset),
 
     .cfg_lanes_disable(rx_cfg_lanes_disable),
+    .cfg_links_disable(rx_cfg_links_disable),
     .cfg_beats_per_multiframe(rx_cfg_beats_per_multiframe),
     .cfg_octets_per_frame(rx_cfg_octets_per_frame),
     .cfg_lmfc_offset(rx_cfg_lmfc_offset),

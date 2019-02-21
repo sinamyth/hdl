@@ -149,7 +149,7 @@ module system_top (
     .spi_adf4355 (gpio_o[36]),
     .spi_adf4355_ce (gpio_o[37]),
     .spi_clk (spi_clk),
-    .spi_csn (spi_csn),
+    .spi_csn (spi_csn[2:0]),
     .spi_mosi (spi_mosi),
     .spi_miso (spi_miso),
     .spi_adc_csn (spi_adc_csn),
@@ -171,6 +171,9 @@ module system_top (
     .dio_i (gpio_o[20:0]),
     .dio_o (gpio_i[20:0]),
     .dio_p (gpio_bd));
+
+  assign gpio_i[63:34] = gpio_o[63:34];
+  assign gpio_i[31:21] = gpio_o[31:21];
 
   ad_sysref_gen i_sysref (
     .core_clk (rx_clk),
@@ -208,11 +211,6 @@ module system_top (
     .linear_flash_dq_io (linear_flash_dq_io),
     .linear_flash_oen (linear_flash_oen),
     .linear_flash_wen (linear_flash_wen),
-    .mb_intr_06 (1'd0),
-    .mb_intr_07 (1'd0),
-    .mb_intr_08 (1'd0),
-    .mb_intr_14 (1'd0),
-    .mb_intr_15 (1'd0),
     .mdio_mdc (mdio_mdc),
     .mdio_mdio_io (mdio_mdio),
     .mgt_clk_clk_n (mgt_clk_n),

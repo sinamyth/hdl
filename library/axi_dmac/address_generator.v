@@ -33,6 +33,8 @@
 // ***************************************************************************
 // ***************************************************************************
 
+`timescale 1ns/100ps
+
 module dmac_address_generator #(
 
   parameter ID_WIDTH = 3,
@@ -48,11 +50,13 @@ module dmac_address_generator #(
   input                        req_valid,
   output reg                   req_ready,
   input [DMA_ADDR_WIDTH-1:BYTES_PER_BEAT_WIDTH] req_address,
-  input [BEATS_PER_BURST_WIDTH-1:0] req_last_burst_length,
 
   output reg [ID_WIDTH-1:0]  id,
   input [ID_WIDTH-1:0]       request_id,
-  input                      sync_id,
+
+  input                             bl_valid,
+  output reg                        bl_ready,
+  input [BEATS_PER_BURST_WIDTH-1:0] measured_last_burst_length,
 
   input                        eot,
 
@@ -72,7 +76,7 @@ module dmac_address_generator #(
 localparam MAX_BEATS_PER_BURST = {1'b1,{BEATS_PER_BURST_WIDTH{1'b0}}};
 localparam MAX_LENGTH = {BEATS_PER_BURST_WIDTH{1'b1}};
 
-`include "inc_id.h"
+`include "inc_id.vh"
 
 assign burst = 2'b01;
 assign prot = 3'b000;
@@ -99,54 +103,48 @@ reg last = 1'b0;
 always @(posedge clk) begin
   if (resetn == 1'b0) begin
     enabled <= 1'b0;
-  end else begin
-    if (enable)
-      enabled <= 1'b1;
-    else if (~addr_valid)
-      enabled <= 1'b0;
+  end else if (enable == 1'b1) begin
+    enabled <= 1'b1;
+  end else if (addr_valid == 1'b0) begin
+    enabled <= 1'b0;
+  end
+end
+
+always @(posedge clk) begin
+  if (bl_valid == 1'b1 && bl_ready == 1'b1) begin
+    last_burst_len <= measured_last_burst_length;
   end
 end
 
 always @(posedge clk) begin
   if (addr_valid == 1'b0) begin
-    if (eot == 1'b1)
-      length <= last_burst_len;
-    else
-      length <= MAX_LENGTH;
-  end
-end
-
-always @(posedge clk) begin
-  if (resetn == 1'b0) begin
-    last <= 1'b0;
-  end else if (addr_valid == 1'b0) begin
     last <= eot;
+    if (eot == 1'b1) begin
+      length <= last_burst_len;
+    end else begin
+      length <= MAX_LENGTH;
+    end
+  end
+end
+
+always @(posedge clk) begin
+  if (req_ready == 1'b1) begin
+    address <= req_address;
+  end else if (addr_valid == 1'b1 && addr_ready == 1'b1) begin
+    address <= address + MAX_BEATS_PER_BURST;
   end
 end
 
 always @(posedge clk) begin
   if (resetn == 1'b0) begin
-    address <= 'h00;
-    last_burst_len <= 'h00;
-    req_ready <= 1'b1;
-    addr_valid <= 1'b0;
+    bl_ready <= 1'b1;
   end else begin
-    if (~enabled) begin
-      req_ready <= 1'b1;
-    end else if (req_ready) begin
-      if (req_valid && enable) begin
-        address <= req_address;
-        req_ready <= 1'b0;
-        last_burst_len <= req_last_burst_length;
-      end
-    end else begin
-      if (addr_valid && addr_ready) begin
-        address <= address + MAX_BEATS_PER_BURST;
-        addr_valid <= 1'b0;
-        if (last)
-          req_ready <= 1'b1;
-      end else if (id != request_id && enable) begin
-        addr_valid <= 1'b1;
+    if (bl_ready == 1'b1) begin
+      bl_ready <= ~bl_valid;
+    end else if (addr_valid == 1'b0 && eot == 1'b1) begin
+      // assert bl_ready only when the addr_valid asserts in the next cycle
+      if (id != request_id && enable == 1'b1) begin
+        bl_ready <= 1'b1;
       end
     end
   end
@@ -154,14 +152,32 @@ end
 
 always @(posedge clk) begin
   if (resetn == 1'b0) begin
-    id <='h0;
-    addr_valid_d1 <= 1'b0;
+    req_ready <= 1'b1;
+    addr_valid <= 1'b0;
   end else begin
-    addr_valid_d1 <= addr_valid;
-    if ((addr_valid && ~addr_valid_d1) ||
-      (sync_id && id != request_id))
-      id <= inc_id(id);
+    if (req_ready == 1'b1) begin
+      req_ready <= ~req_valid;
+    end else if (addr_valid == 1'b1 && addr_ready == 1'b1) begin
+      addr_valid <= 1'b0;
+      req_ready <= last;
+    end else if (id != request_id && enable == 1'b1) begin
+      // if eot wait until the last_burst_len gets synced over
+      if (eot == 1'b0 || (eot == 1'b1 && bl_ready == 1'b0)) begin
+        addr_valid <= 1'b1;
+      end
+    end
+  end
+end
 
+always @(posedge clk) begin
+  addr_valid_d1 <= addr_valid;
+end
+
+always @(posedge clk) begin
+  if (resetn == 1'b0) begin
+    id <= 'h0;
+  end else if (addr_valid == 1'b1 && addr_valid_d1 == 1'b0) begin
+    id <= inc_id(id);
   end
 end
 

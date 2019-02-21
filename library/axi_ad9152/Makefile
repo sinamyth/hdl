@@ -18,7 +18,11 @@ ALTERA_DEPS += ../altera/common/up_xfer_cntrl_constr.sdc
 ALTERA_DEPS += ../altera/common/up_xfer_status_constr.sdc
 ALTERA_DEPS += ../common/ad_dds.v
 ALTERA_DEPS += ../common/ad_dds_1.v
+ALTERA_DEPS += ../common/ad_dds_2.v
+ALTERA_DEPS += ../common/ad_dds_cordic_pipe.v
 ALTERA_DEPS += ../common/ad_dds_sine.v
+ALTERA_DEPS += ../common/ad_dds_sine_cordic.v
+ALTERA_DEPS += ../common/ad_perfect_shuffle.v
 ALTERA_DEPS += ../common/ad_rst.v
 ALTERA_DEPS += ../common/up_axi.v
 ALTERA_DEPS += ../common/up_clock_mon.v
@@ -30,7 +34,9 @@ ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac.v
 ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_channel.v
 ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_core.v
 ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_framer.v
+ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_pn.v
 ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_dac/ad_ip_jesd204_tpl_dac_regmap.v
+ALTERA_DEPS += ../jesd204/ad_ip_jesd204_tpl_common/up_tpl_common.v
 ALTERA_DEPS += axi_ad9152_hw.tcl
 
 include ../scripts/library.mk

@@ -69,8 +69,8 @@ module system_top (
 
   // internal signals
 
-  wire    [95:0]  gpio_i;
-  wire    [95:0]  gpio_o;
+  wire    [94:0]  gpio_i;
+  wire    [94:0]  gpio_o;
   wire    [ 2:0]  spi0_csn;
 
   // defaults
@@ -81,7 +81,7 @@ module system_top (
   assign gpio_ctl = gpio_o[43:40];
   assign gpio_bd_o = gpio_o[20:13];
 
-  assign gpio_i[95:40] = gpio_o[95:40];
+  assign gpio_i[94:40] = gpio_o[94:40];
   assign gpio_i[39:32] = gpio_status;
   assign gpio_i[31:13] = gpio_o[31:13];
   assign gpio_i[12: 0] = gpio_bd_i;
@@ -94,20 +94,7 @@ module system_top (
     .enable (enable),
     .gpio_i (gpio_i),
     .gpio_o (gpio_o),
-    .ps_intr_00 (1'b0),
-    .ps_intr_01 (1'b0),
-    .ps_intr_02 (1'b0),
-    .ps_intr_03 (1'b0),
-    .ps_intr_04 (1'b0),
-    .ps_intr_05 (1'b0),
-    .ps_intr_06 (1'b0),
-    .ps_intr_07 (1'b0),
-    .ps_intr_08 (1'b0),
-    .ps_intr_09 (1'b0),
-    .ps_intr_10 (1'b0),
-    .ps_intr_11 (1'b0),
-    .ps_intr_14 (1'b0),
-    .ps_intr_15 (1'b0),
+    .gpio_t (),
     .rx_clk_in_n (rx_clk_in_n),
     .rx_clk_in_p (rx_clk_in_p),
     .rx_data_in_n (rx_data_in_n),

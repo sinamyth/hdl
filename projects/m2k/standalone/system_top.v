@@ -115,7 +115,7 @@ module system_top (
     .dio_p ({ en_power_analog,
               ad9963_resetn}));
 
-  assign gpio_i[16:2] = 'h0;
+  assign gpio_i[16:2] = gpio_o[16:2];
 
   ad_iobuf #(
     .DATA_WIDTH(16)
@@ -180,16 +180,6 @@ module system_top (
     .tx_clk(tx_clk),
     .txiq(txiq),
     .txd(txd),
-    .ps_intr_00 (1'b0),
-    .ps_intr_01 (1'b0),
-    .ps_intr_02 (1'b0),
-    .ps_intr_03 (1'b0),
-    .ps_intr_04 (1'b0),
-    .ps_intr_05 (1'b0),
-    .ps_intr_06 (1'b0),
-    .ps_intr_07 (1'b0),
-    .ps_intr_11 (1'b0),
-    .ps_intr_15 (1'b0),
     .spi0_clk_i (spi0_clk),
     .spi0_clk_o (spi0_clk),
     .spi0_csn_0_o (spi0_csn[0]),

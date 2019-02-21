@@ -111,8 +111,6 @@ module system_top (
   wire    [ 94:0] gpio_i;
   wire    [ 94:0] gpio_o;
   wire            gpio_sync;
-  wire            gpio_open_44_44;
-  wire            gpio_open_15_15;
   wire    [ 2:0]  spi0_csn;
   wire            spi0_clk;
   wire            spi0_mosi;
@@ -161,14 +159,12 @@ module system_top (
   assign gpio_en_agc_0 = gpio_o[53];
   assign gpio_resetb_0 = gpio_o[52];
   assign gpio_sync = gpio_o[51];
-  assign gpio_open_44_44 = gpio_o[50];
   assign gpio_debug_4_0 = gpio_o[49];
   assign gpio_debug_3_0 = gpio_o[48];
   assign gpio_debug_2_0 = gpio_o[47];
   assign gpio_debug_1_0 = gpio_o[46];
   assign gpio_ctl_1 = gpio_o[45:42];
   assign gpio_ctl_0 = gpio_o[41:38];
-  assign gpio_open_15_15 = gpio_o[21];
   assign gpio_bd_o = gpio_o[20:13];
   assign gpio_i[12: 0] = gpio_bd_i;
   assign gpio_i[21:13] = gpio_o[21:13];
@@ -192,20 +188,6 @@ module system_top (
     .gpio_i (gpio_i),
     .gpio_o (gpio_o),
     .gpio_t (),
-    .ps_intr_00 (1'b0),
-    .ps_intr_01 (1'b0),
-    .ps_intr_02 (1'b0),
-    .ps_intr_03 (1'b0),
-    .ps_intr_04 (1'b0),
-    .ps_intr_05 (1'b0),
-    .ps_intr_06 (1'b0),
-    .ps_intr_07 (1'b0),
-    .ps_intr_08 (1'b0),
-    .ps_intr_09 (1'b0),
-    .ps_intr_10 (1'b0),
-    .ps_intr_11 (1'b0),
-    .ps_intr_14 (1'b0),
-    .ps_intr_15 (1'b0),
     .rx_clk_in_0_n (rx_clk_in_0_n),
     .rx_clk_in_0_p (rx_clk_in_0_p),
     .rx_clk_in_1_n (rx_clk_in_1_n),

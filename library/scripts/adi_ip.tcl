@@ -3,7 +3,7 @@
 ## check tool version
 
 if {![info exists REQUIRED_VIVADO_VERSION]} {
-  set REQUIRED_VIVADO_VERSION "2017.4.1"
+  set REQUIRED_VIVADO_VERSION "2018.2"
 }
 
 if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {
@@ -24,6 +24,17 @@ proc adi_ip_ttcl {ip_name ip_constr_files} {
     type ttcl \
   ] $f
   ipx::reorder_files -front $ip_constr_files $proj_filegroup
+}
+
+# add ttcl file to the simulation file set
+proc adi_ip_sim_ttcl {ip_name ip_files} {
+
+  set proj_filegroup [ipx::get_file_groups -of_objects [ipx::current_core] -filter {NAME =~ *simulation*}]
+  set f [ipx::add_file $ip_files $proj_filegroup]
+  set_property -dict [list \
+    type ttcl \
+  ] $f
+  ipx::reorder_files -front $ip_files $proj_filegroup
 }
 
 proc adi_ip_bd {ip_name ip_bd_files} {
@@ -60,7 +71,7 @@ proc adi_set_ports_dependency {port_prefix dependency {driver_value {}}} {
 
 proc adi_set_bus_dependency {bus prefix dependency} {
   set_property ENABLEMENT_DEPENDENCY $dependency [ipx::get_bus_interfaces $bus -of_objects [ipx::current_core]]
-  adi_set_ports_dependency $prefix $dependency
+  adi_set_ports_dependency $prefix $dependency 0
 }
 
 proc adi_add_port_map {bus phys logic} {
@@ -289,11 +300,7 @@ proc adi_ip_properties {ip_name} {
   ipx::add_address_block {axi_lite} [ipx::get_memory_maps s_axi -of_objects [ipx::current_core]]
   set_property range $range [ipx::get_address_blocks axi_lite \
     -of_objects [ipx::get_memory_maps s_axi -of_objects [ipx::current_core]]]
-  ipx::add_bus_parameter ASSOCIATED_BUSIF [ipx::get_bus_interfaces s_axi_aclk \
-    -of_objects [ipx::current_core]]
-  set_property value s_axi [ipx::get_bus_parameters ASSOCIATED_BUSIF \
-    -of_objects [ipx::get_bus_interfaces s_axi_aclk \
-    -of_objects [ipx::current_core]]]
+  ipx::associate_bus_interfaces -clock s_axi_aclk -reset s_axi_aresetn [ipx::current_core]
   ipx::save_core
 }
 

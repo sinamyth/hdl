@@ -31,10 +31,18 @@ set xcvr_instance NONE
 ###################################################################################################
 ###################################################################################################
 
-proc ad_ip_instance {i_ip i_name} {
+proc ad_ip_instance {i_ip i_name {i_params {}}} {
 
-  create_bd_cell -type ip -vlnv [get_ipdefs -all -filter "VLNV =~ *:${i_ip}:* && \
-    design_tool_contexts =~ *IPI* && UPGRADE_VERSIONS == \"\""] ${i_name}
+  set cell [create_bd_cell -type ip -vlnv [get_ipdefs -all -filter "VLNV =~ *:${i_ip}:* && \
+    design_tool_contexts =~ *IPI* && UPGRADE_VERSIONS == \"\""] ${i_name}]
+  if {$i_params != {}} {
+    set config {}
+    # Add CONFIG. prefix to all config options
+    foreach {k v} $i_params {
+      lappend config "CONFIG.$k" $v
+    }
+    set_property -dict $config $cell
+  }
 }
 
 proc ad_ip_parameter {i_name i_param i_value} {
@@ -68,18 +76,19 @@ proc ad_connect {p_name_1 p_name_2} {
     if {($p_msb ne "") && ($p_lsb ne "")} {
       set p_size [expr (($p_msb + 1) - $p_lsb)]
     }
-    set p_cell_name [regsub -all {/} $p_name_1 "_"]
-    set p_cell_name "${p_cell_name}_${p_name_2}"
-    if {$p_name_2 eq "VCC"} {
-      set p_value -1
-    } else {
-      set p_value 0
+    set p_cell_name "$p_name_2\_$p_size"
+    if {[get_bd_cells -quiet $p_cell_name] eq ""} {
+      if {$p_name_2 eq "VCC"} {
+        set p_value [expr (1 << $p_size) - 1]
+      } else {
+        set p_value 0
+      }
+      ad_ip_instance xlconstant $p_cell_name
+      set_property CONFIG.CONST_WIDTH $p_size [get_bd_cells $p_cell_name]
+      set_property CONFIG.CONST_VAL $p_value [get_bd_cells $p_cell_name]
     }
-    ad_ip_instance xlconstant $p_cell_name
-    set_property CONFIG.CONST_WIDTH $p_size [get_bd_cells $p_cell_name]
-    set_property CONFIG.CONST_VAL $p_value [get_bd_cells $p_cell_name]
     puts "connect_bd_net $p_cell_name/dout $p_name_1"
-    connect_bd_net [get_bd_pins $p_cell_name/dout] [get_bd_pins $p_name_1]
+    connect_bd_net [get_bd_pins $p_name_1] [get_bd_pins $p_cell_name/dout]
     return
   }
 
@@ -171,8 +180,8 @@ proc ad_reconct {p_name_1 p_name_2} {
 # lane_map maps the logical lane $n onto the physical lane $lane_map[$n]. If no
 # lane map is provided logical lane $n is mapped onto physical lane $n.
 #
-proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}}} {
-  
+proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {device_clk {}}} {
+
   global xcvr_index
   global xcvr_tx_index
   global xcvr_rx_index
@@ -231,9 +240,30 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}}} {
     set m_data ${txrx}_data_${xcvr_index}
   }
 
+  if {$jesd204_type == 0} {
+    set num_of_links [get_property CONFIG.NUM_LINKS [get_bd_cells $a_jesd/$txrx]]
+  } else {
+    set num_of_links 1
+  }
+
   create_bd_port -dir I $m_sysref
-  create_bd_port -dir ${ctrl_dir} $m_sync
-  ad_ip_instance proc_sys_reset ${a_jesd}_rstgen
+  create_bd_port -from [expr $num_of_links - 1] -to 0 -dir ${ctrl_dir} $m_sync
+
+  if {$device_clk == {}} {
+    set device_clk ${u_xcvr}/${txrx}_out_clk_${index}
+    set rst_gen [regsub -all "/" ${a_jesd}_rstgen "_"]
+    set create_rst_gen 1
+  } else {
+    set rst_gen ${device_clk}_rstgen
+    # Only create one reset gen per clock
+    set create_rst_gen [expr {[get_bd_cells -quiet ${rst_gen}] == {}}]
+  }
+
+  if {${create_rst_gen}} {
+    ad_ip_instance proc_sys_reset ${rst_gen}
+    ad_connect ${device_clk} ${rst_gen}/slowest_sync_clk
+    ad_connect sys_cpu_resetn ${rst_gen}/ext_reset_in
+  }
 
   for {set n 0} {$n < $no_of_lanes} {incr n} {
 
@@ -253,17 +283,22 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}}} {
     }
 
     if {$lane_map != {}} {
-      set phys_lane [expr [lindex $lane_map $n] + $index]
+      set phys_lane [lindex $lane_map $n]
+      if {$phys_lane != {}} {
+        set phys_lane [expr $phys_lane + $index]
+      }
     } else {
       set phys_lane $m
     }
 
     ad_connect  ${a_xcvr}/up_ch_${n} ${u_xcvr}/up_${txrx}_${m}
-    ad_connect  ${u_xcvr}/${txrx}_out_clk_${index} ${u_xcvr}/${txrx}_clk_${m}
-    if {$jesd204_type == 0} {
-      ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/${txrx}_phy${n}
-    } else {
-      ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/gt${n}_${txrx}
+    ad_connect  ${device_clk} ${u_xcvr}/${txrx}_clk_${m}
+    if {$phys_lane != {}} {
+      if {$jesd204_type == 0} {
+        ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/${txrx}_phy${n}
+      } else {
+        ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/gt${n}_${txrx}
+      }
     }
 
     create_bd_port -dir ${data_dir} ${m_data}_${m}_p
@@ -275,20 +310,17 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}}} {
   if {$jesd204_type == 0} {
     ad_connect  ${a_jesd}/sysref $m_sysref
     ad_connect  ${a_jesd}/sync $m_sync
-    ad_connect  ${u_xcvr}/${txrx}_out_clk_${index} ${a_jesd}/device_clk
+    ad_connect  ${device_clk} ${a_jesd}/device_clk
 #    if {$tx_or_rx_n == 0} {
 #      ad_connect  ${a_xcvr}/up_status ${a_jesd}/phy_ready
 #    }
   } else {
     ad_connect  ${a_jesd}/${txrx}_sysref $m_sysref
     ad_connect  ${a_jesd}/${txrx}_sync $m_sync
-    ad_connect  ${u_xcvr}/${txrx}_out_clk_${index} ${a_jesd}/${txrx}_core_clk
+    ad_connect  ${device_clk} ${a_jesd}/${txrx}_core_clk
     ad_connect  ${a_xcvr}/up_status ${a_jesd}/${txrx}_reset_done
-    ad_connect  ${a_jesd}_rstgen/peripheral_reset ${a_jesd}/${txrx}_reset
+    ad_connect  ${rst_gen}/peripheral_reset ${a_jesd}/${txrx}_reset
   }
-
-  ad_connect  ${u_xcvr}/${txrx}_out_clk_${index} ${a_jesd}_rstgen/slowest_sync_clk
-  ad_connect  sys_cpu_resetn ${a_jesd}_rstgen/ext_reset_in
 
   if {$tx_or_rx_n == 0} {
     set xcvr_rx_index [expr ($xcvr_rx_index + $no_of_lanes)]
@@ -699,29 +731,29 @@ proc ad_cpu_interrupt {p_ps_index p_mb_index p_name} {
 
   if {($sys_zynq == 2) && ($p_index <= 7)} {
     set p_net [get_bd_nets -of_objects [get_bd_pins sys_concat_intc_0/In$p_index]]
-    set p_pin [find_bd_objs -relation connected_to [get_bd_pins sys_concat_intc_0/In$p_index]]
+    set p_pin [get_bd_pins sys_concat_intc_0/In$p_index]
 
-    puts "delete_bd_objs $p_net $p_pin"
-    delete_bd_objs $p_net $p_pin
+    puts "disconnect_bd_net $p_net $p_pin"
+    disconnect_bd_net $p_net $p_pin
     ad_connect sys_concat_intc_0/In$p_index $p_name
   }
 
   if {($sys_zynq == 2) && ($p_index >= 8)} {
     set p_net [get_bd_nets -of_objects [get_bd_pins sys_concat_intc_1/In$m_index]]
-    set p_pin [find_bd_objs -relation connected_to [get_bd_pins sys_concat_intc_1/In$m_index]]
+    set p_pin [get_bd_pins sys_concat_intc_1/In$m_index]
 
-    puts "delete_bd_objs $p_net $p_pin"
-    delete_bd_objs $p_net $p_pin
+    puts "disconnect_bd_net $p_net $p_pin"
+    disconnect_bd_net $p_net $p_pin
     ad_connect sys_concat_intc_1/In$m_index $p_name
   }
 
   if {$sys_zynq <= 1} {
 
     set p_net [get_bd_nets -of_objects [get_bd_pins sys_concat_intc/In$p_index]]
-    set p_pin [find_bd_objs -relation connected_to [get_bd_pins sys_concat_intc/In$p_index]]
+    set p_pin [get_bd_pins sys_concat_intc/In$p_index]
 
-    puts "delete_bd_objs $p_net $p_pin"
-    delete_bd_objs $p_net $p_pin
+    puts "disconnect_bd_net $p_net $p_pin"
+    disconnect_bd_net $p_net $p_pin
     ad_connect sys_concat_intc/In$p_index $p_name
   }
 }
