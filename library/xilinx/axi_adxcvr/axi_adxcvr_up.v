@@ -54,69 +54,69 @@ module axi_adxcvr_up #(
 
   // common
 
-  output  [ 7:0]  up_cm_sel,
-  output          up_cm_enb,
-  output  [11:0]  up_cm_addr,
-  output          up_cm_wr,
-  output  [15:0]  up_cm_wdata,
-  input   [15:0]  up_cm_rdata,
-  input           up_cm_ready,
+  output     [ 7:0]   up_cm_sel,
+  output              up_cm_enb,
+  output     [11:0]   up_cm_addr,
+  output              up_cm_wr,
+  output     [15:0]   up_cm_wdata,
+  input      [15:0]   up_cm_rdata,
+  input               up_cm_ready,
 
   // channel
 
-  input           up_ch_pll_locked,
-  output          up_ch_rst,
-  output          up_ch_user_ready,
-  input           up_ch_rst_done,
-  output          up_ch_lpm_dfe_n,
-  output  [ 2:0]  up_ch_rate,
-  output  [ 1:0]  up_ch_sys_clk_sel,
-  output  [ 2:0]  up_ch_out_clk_sel,
-  output  [ 3:0]  up_ch_tx_diffctrl,
-  output  [ 4:0]  up_ch_tx_postcursor,
-  output  [ 4:0]  up_ch_tx_precursor,
-  output  [ 7:0]  up_ch_sel,
-  output          up_ch_enb,
-  output  [11:0]  up_ch_addr,
-  output          up_ch_wr,
-  output  [15:0]  up_ch_wdata,
-  input   [15:0]  up_ch_rdata,
-  input           up_ch_ready,
+  input               up_ch_pll_locked,
+  output              up_ch_rst,
+  output              up_ch_user_ready,
+  input               up_ch_rst_done,
+  output              up_ch_lpm_dfe_n,
+  output     [ 2:0]   up_ch_rate,
+  output     [ 1:0]   up_ch_sys_clk_sel,
+  output     [ 2:0]   up_ch_out_clk_sel,
+  output     [ 3:0]   up_ch_tx_diffctrl,
+  output     [ 4:0]   up_ch_tx_postcursor,
+  output     [ 4:0]   up_ch_tx_precursor,
+  output     [ 7:0]   up_ch_sel,
+  output              up_ch_enb,
+  output     [11:0]   up_ch_addr,
+  output              up_ch_wr,
+  output     [15:0]   up_ch_wdata,
+  input      [15:0]   up_ch_rdata,
+  input               up_ch_ready,
 
   // eye-scan
 
-  output  [ 7:0]  up_es_sel,
-  output          up_es_req,
-  output  [15:0]  up_es_reset,
-  input           up_es_ack,
-  output  [ 4:0]  up_es_pscale,
-  output  [ 1:0]  up_es_vrange,
-  output  [ 7:0]  up_es_vstep,
-  output  [ 7:0]  up_es_vmax,
-  output  [ 7:0]  up_es_vmin,
-  output  [11:0]  up_es_hmax,
-  output  [11:0]  up_es_hmin,
-  output  [11:0]  up_es_hstep,
-  output  [31:0]  up_es_saddr,
-  input           up_es_status,
+  output     [ 7:0]   up_es_sel,
+  output              up_es_req,
+  output reg [15:0]   up_es_reset = 'h0,
+  input               up_es_ack,
+  output     [ 4:0]   up_es_pscale,
+  output     [ 1:0]   up_es_vrange,
+  output     [ 7:0]   up_es_vstep,
+  output     [ 7:0]   up_es_vmax,
+  output     [ 7:0]   up_es_vmin,
+  output     [11:0]   up_es_hmax,
+  output     [11:0]   up_es_hmin,
+  output     [11:0]   up_es_hstep,
+  output     [31:0]   up_es_saddr,
+  input               up_es_status,
 
   // status
 
-  output          up_status,
-  output          up_pll_rst,
+  output              up_status,
+  output              up_pll_rst,
 
   // bus interface
 
-  input           up_rstn,
-  input           up_clk,
-  input           up_wreq,
-  input   [ 9:0]  up_waddr,
-  input   [31:0]  up_wdata,
-  output          up_wack,
-  input           up_rreq,
-  input   [ 9:0]  up_raddr,
-  output  [31:0]  up_rdata,
-  output          up_rack);
+  input               up_rstn,
+  input               up_clk,
+  input               up_wreq,
+  input      [ 9:0]   up_waddr,
+  input      [31:0]   up_wdata,
+  output              up_wack,
+  input               up_rreq,
+  input      [ 9:0]   up_raddr,
+  output     [31:0]   up_rdata,
+  output              up_rack);
 
   // parameters
 
@@ -164,7 +164,6 @@ module axi_adxcvr_up #(
   reg             up_ies_status = 'd0;
   reg             up_rreq_d = 'd0;
   reg     [31:0]  up_rdata_d = 'd0;
-  reg     [15:0]  up_es_reset = 'd0;
 
   // internal signals
 
@@ -395,6 +394,7 @@ module axi_adxcvr_up #(
       up_ies_hoffset_step <= 'd0;
       up_ies_start_addr <= 'd0;
       up_ies_status <= 'd0;
+      up_es_reset <= 'd0;
     end else begin
       up_ies_sel <= 'd0;
       up_ies_req <= 'd0;
@@ -408,6 +408,7 @@ module axi_adxcvr_up #(
       up_ies_hoffset_step <= 'd0;
       up_ies_start_addr <= 'd0;
       up_ies_status <= 'd0;
+      up_es_reset <= 'd0;
     end
   end
   end else begin
