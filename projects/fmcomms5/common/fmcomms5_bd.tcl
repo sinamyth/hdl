@@ -42,14 +42,15 @@ create_bd_port -dir I up_enable_1
 create_bd_port -dir I up_txnrx_1
 
 create_bd_port -dir O sys_100m_resetn
-ad_connect sys_cpu_resetn sys_100m_resetn
+ad_connect $sys_cpu_resetn sys_100m_resetn
 
 # ad9361 core (master)
 
 ad_ip_instance axi_ad9361 axi_ad9361_0
 ad_ip_parameter axi_ad9361_0 CONFIG.ID 0
 ad_ip_parameter axi_ad9361_0 CONFIG.IO_DELAY_GROUP dev_0_if_delay_group
-ad_connect sys_200m_clk axi_ad9361_0/delay_clk
+ad_ip_parameter axi_ad9361_0 CONFIG.MIMO_ENABLE 1
+ad_connect $sys_iodelay_clk axi_ad9361_0/delay_clk
 ad_connect axi_ad9361_0/l_clk axi_ad9361_0/clk
 ad_connect axi_ad9361_0/dac_sync_out axi_ad9361_0/dac_sync_in
 ad_connect rx_clk_in_0_p axi_ad9361_0/rx_clk_in_p
@@ -74,7 +75,8 @@ ad_connect up_txnrx_0 axi_ad9361_0/up_txnrx
 ad_ip_instance axi_ad9361 axi_ad9361_1
 ad_ip_parameter axi_ad9361_1 CONFIG.ID 1
 ad_ip_parameter axi_ad9361_1 CONFIG.IO_DELAY_GROUP dev_1_if_delay_group
-ad_connect sys_200m_clk axi_ad9361_1/delay_clk
+ad_ip_parameter axi_ad9361_1 CONFIG.MIMO_ENABLE 1
+ad_connect $sys_iodelay_clk axi_ad9361_1/delay_clk
 ad_connect axi_ad9361_0/l_clk axi_ad9361_1/clk
 ad_connect axi_ad9361_0/dac_sync_out axi_ad9361_1/dac_sync_in
 ad_connect rx_clk_in_1_p axi_ad9361_1/rx_clk_in_p
@@ -188,7 +190,7 @@ ad_ip_parameter axi_ad9361_adc_dma CONFIG.DMA_DATA_WIDTH_SRC 128
 ad_ip_parameter axi_ad9361_adc_dma CONFIG.DMA_DATA_WIDTH_DEST 64
 ad_connect util_ad9361_divclk/clk_out axi_ad9361_adc_dma/fifo_wr_clk
 ad_connect util_ad9361_adc_pack/packed_fifo_wr axi_ad9361_adc_dma/fifo_wr
-ad_connect sys_cpu_resetn axi_ad9361_adc_dma/m_dest_axi_aresetn
+ad_connect $sys_dma_resetn axi_ad9361_adc_dma/m_dest_axi_aresetn
 
 # dac-path rfifo
 
@@ -259,7 +261,7 @@ ad_ip_parameter axi_ad9361_dac_dma CONFIG.DMA_2D_TRANSFER 0
 ad_ip_parameter axi_ad9361_dac_dma CONFIG.DMA_DATA_WIDTH_DEST 128
 ad_ip_parameter axi_ad9361_dac_dma CONFIG.DMA_DATA_WIDTH_SRC 64
 
-ad_connect sys_cpu_resetn axi_ad9361_dac_dma/m_src_axi_aresetn
+ad_connect $sys_dma_resetn axi_ad9361_dac_dma/m_src_axi_aresetn
 ad_connect util_ad9361_divclk/clk_out axi_ad9361_dac_dma/m_axis_aclk
 ad_connect axi_ad9361_dac_dma/m_axis util_ad9361_dac_upack/s_axis
 
@@ -269,10 +271,10 @@ ad_cpu_interconnect 0x79020000 axi_ad9361_0
 ad_cpu_interconnect 0x7C420000 axi_ad9361_dac_dma
 ad_cpu_interconnect 0x7C400000 axi_ad9361_adc_dma
 ad_cpu_interconnect 0x79040000 axi_ad9361_1
-ad_mem_hp2_interconnect sys_dma_clk sys_ps7/S_AXI_HP2
-ad_mem_hp2_interconnect sys_dma_clk axi_ad9361_adc_dma/m_dest_axi
-ad_mem_hp3_interconnect sys_dma_clk sys_ps7/S_AXI_HP3
-ad_mem_hp3_interconnect sys_dma_clk axi_ad9361_dac_dma/m_src_axi
+ad_mem_hp2_interconnect $sys_dma_clk sys_ps7/S_AXI_HP2
+ad_mem_hp2_interconnect $sys_dma_clk axi_ad9361_adc_dma/m_dest_axi
+ad_mem_hp3_interconnect $sys_dma_clk sys_ps7/S_AXI_HP3
+ad_mem_hp3_interconnect $sys_dma_clk axi_ad9361_dac_dma/m_src_axi
 
 # interrupts
 

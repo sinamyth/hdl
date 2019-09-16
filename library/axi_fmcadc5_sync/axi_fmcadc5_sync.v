@@ -44,11 +44,12 @@ module axi_fmcadc5_sync #(
   parameter [ 7:0]  FPGA_TECHNOLOGY = 0,
   parameter [ 7:0]  FPGA_FAMILY = 0,
   parameter [ 7:0]  SPEED_GRADE = 0,
-  parameter [ 7:0]  DEV_PACKAGE = 0) (
+  parameter [ 7:0]  DEV_PACKAGE = 0,
+  parameter         DELAY_REFCLK_FREQUENCY = 200) (
 
     // receive interface
- 
-  input             rx_clk, 
+
+  input             rx_clk,
   output            rx_sysref,
   input             rx_sync_0,
   input             rx_sync_1,
@@ -74,7 +75,7 @@ module axi_fmcadc5_sync #(
   output            psync,
 
   // delay interface
- 
+
   input             delay_rst,
   input             delay_clk,
 
@@ -252,7 +253,7 @@ module axi_fmcadc5_sync #(
   assign up_clk = s_axi_aclk;
 
   // switching regulator clocks (~602K)
- 
+
   assign psync = up_psync;
 
   always @(negedge up_rstn or posedge up_clk) begin
@@ -335,7 +336,7 @@ module axi_fmcadc5_sync #(
     end
   end
 
-  // calibration signal register(s) 
+  // calibration signal register(s)
 
   assign vcal = up_vcal;
 
@@ -362,7 +363,7 @@ module axi_fmcadc5_sync #(
     end
   end
 
-  // sysref register(s) 
+  // sysref register(s)
 
   assign up_sysref_ack_t_s = up_sysref_ack_t_m3 ^ up_sysref_ack_t_m2;
 
@@ -405,7 +406,7 @@ module axi_fmcadc5_sync #(
     end
   end
 
-  // sync register(s) 
+  // sync register(s)
 
   always @(negedge up_rstn or posedge up_clk) begin
     if (up_rstn == 0) begin
@@ -424,7 +425,7 @@ module axi_fmcadc5_sync #(
   end
 
   // simple current status (no persistence)
- 
+
   assign up_sync_status_t_s = up_sync_status_t_m3 ^ up_sync_status_t_m2;
 
   always @(negedge up_rstn or posedge up_clk) begin
@@ -464,7 +465,7 @@ module axi_fmcadc5_sync #(
   end
 
   // switching must be glitchless
- 
+
   assign spi_csn = up_spi_csn_int;
   assign spi_clk = up_spi_clk_int;
   assign spi_mosi = up_spi_mosi_int;
@@ -480,7 +481,7 @@ module axi_fmcadc5_sync #(
       up_spi_mosi_int <= spi_sdo_o;
     end
   end
-  
+
   assign up_spi_gnt_s = (&spi_csn_o) & ~spi_clk_o;
 
   always @(posedge up_clk or negedge up_rstn) begin
@@ -748,7 +749,7 @@ module axi_fmcadc5_sync #(
   end
 
   // sync buffers
- 
+
   OBUFDS i_obufds_rx_sync_1 (
     .I (rx_sync_out_1),
     .O (rx_sync_1_p),
@@ -768,7 +769,8 @@ module axi_fmcadc5_sync #(
     .SINGLE_ENDED (0),
     .IODELAY_ENABLE (1),
     .IODELAY_CTRL (1),
-    .IODELAY_GROUP ("FMCADC5_SYSREF_IODELAY_GROUP"))
+    .IODELAY_GROUP ("FMCADC5_SYSREF_IODELAY_GROUP"),
+    .REFCLK_FREQUENCY (DELAY_REFCLK_FREQUENCY))
   i_rx_sysref (
     .tx_clk (rx_clk),
     .tx_data_p (rx_sysref_e),
@@ -784,7 +786,7 @@ module axi_fmcadc5_sync #(
     .delay_locked (up_delay_locked_s));
 
   // up == micro("u") processor
- 
+
   up_axi i_up_axi (
     .up_rstn (up_rstn),
     .up_clk (up_clk),

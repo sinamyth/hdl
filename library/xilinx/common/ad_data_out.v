@@ -41,7 +41,8 @@ module ad_data_out #(
   parameter   SINGLE_ENDED = 0,
   parameter   IODELAY_ENABLE = 0,
   parameter   IODELAY_CTRL = 0,
-  parameter   IODELAY_GROUP = "dev_if_delay_group") (
+  parameter   IODELAY_GROUP = "dev_if_delay_group",
+  parameter   REFCLK_FREQUENCY = 200) (
 
   // data interface
 
@@ -123,7 +124,7 @@ module ad_data_out #(
   endgenerate
 
   // odelay
- 
+
   generate
   if (IODELAY_FPGA_TECHNOLOGY == SEVEN_SERIES) begin
   (* IODELAY_GROUP = IODELAY_GROUP *)
@@ -133,7 +134,7 @@ module ad_data_out #(
     .HIGH_PERFORMANCE_MODE ("FALSE"),
     .ODELAY_TYPE ("VAR_LOAD"),
     .ODELAY_VALUE (0),
-    .REFCLK_FREQUENCY (200.0),
+    .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
     .PIPE_SEL ("FALSE"),
     .SIGNAL_PATTERN ("DATA"))
   i_tx_data_odelay (

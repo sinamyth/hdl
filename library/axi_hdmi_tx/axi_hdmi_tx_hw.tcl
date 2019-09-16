@@ -4,7 +4,7 @@ package require qsys
 package require quartus::device
 
 source ../scripts/adi_env.tcl
-source ../scripts/adi_ip_alt.tcl
+source ../scripts/adi_ip_intel.tcl
 
 set_module_property NAME axi_hdmi_tx
 set_module_property DESCRIPTION "AXI HDMI Transmit Interface"
@@ -27,15 +27,15 @@ add_fileset_file up_xfer_cntrl.v          VERILOG PATH $ad_hdl_dir/library/commo
 add_fileset_file up_xfer_status.v         VERILOG PATH $ad_hdl_dir/library/common/up_xfer_status.v
 add_fileset_file up_clock_mon.v           VERILOG PATH $ad_hdl_dir/library/common/up_clock_mon.v
 add_fileset_file up_hdmi_tx.v             VERILOG PATH $ad_hdl_dir/library/common/up_hdmi_tx.v
-add_fileset_file ad_mul.v                 VERILOG PATH $ad_hdl_dir/library/altera/common/ad_mul.v
+add_fileset_file ad_mul.v                 VERILOG PATH $ad_hdl_dir/library/intel/common/ad_mul.v
 add_fileset_file axi_hdmi_tx_vdma.v       VERILOG PATH axi_hdmi_tx_vdma.v
 add_fileset_file axi_hdmi_tx_es.v         VERILOG PATH axi_hdmi_tx_es.v
 add_fileset_file axi_hdmi_tx_core.v       VERILOG PATH axi_hdmi_tx_core.v
 add_fileset_file axi_hdmi_tx.v            VERILOG PATH axi_hdmi_tx.v TOP_LEVEL_FILE
-add_fileset_file up_xfer_cntrl_constr.sdc   SDC PATH  $ad_hdl_dir/library/altera/common/up_xfer_cntrl_constr.sdc
-add_fileset_file up_xfer_status_constr.sdc  SDC PATH  $ad_hdl_dir/library/altera/common/up_xfer_status_constr.sdc
-add_fileset_file up_clock_mon_constr.sdc    SDC PATH  $ad_hdl_dir/library/altera/common/up_clock_mon_constr.sdc
-add_fileset_file up_rst_constr.sdc          SDC PATH  $ad_hdl_dir/library/altera/common/up_rst_constr.sdc
+add_fileset_file up_xfer_cntrl_constr.sdc   SDC PATH  $ad_hdl_dir/library/intel/common/up_xfer_cntrl_constr.sdc
+add_fileset_file up_xfer_status_constr.sdc  SDC PATH  $ad_hdl_dir/library/intel/common/up_xfer_status_constr.sdc
+add_fileset_file up_clock_mon_constr.sdc    SDC PATH  $ad_hdl_dir/library/intel/common/up_clock_mon_constr.sdc
+add_fileset_file up_rst_constr.sdc          SDC PATH  $ad_hdl_dir/library/intel/common/up_rst_constr.sdc
 add_fileset_file axi_hdmi_tx_constr.sdc     SDC PATH axi_hdmi_tx_constr.sdc
 
 # parameters
@@ -101,7 +101,14 @@ add_interface_port hdmi_if hdmi_36_data h36_data Output 36
 add_interface vdma_clock  clock end
 add_interface_port vdma_clock vdma_clk clk Input 1
 
-ad_alt_intf signal vdma_ready         output  1  ready
-ad_alt_intf signal vdma_valid         input   1  valid
-ad_alt_intf signal vdma_data          input   64 data
-ad_alt_intf signal vdma_end_of_frame  input   1  last
+add_interface vdma_if avalon_streaming end
+set_interface_property vdma_if associatedClock vdma_clock
+add_interface_port vdma_if vdma_valid valid Input 1
+add_interface_port vdma_if vdma_data data Input 64
+add_interface_port vdma_if vdma_ready ready Output 1
+
+# frame sync
+
+ad_interface signal  vdma_fs       output  1
+ad_interface signal  vdma_fs_ret   input   1
+

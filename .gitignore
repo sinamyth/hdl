@@ -1,3 +1,6 @@
+ipcache
+*.ip_user_files
+*.dcp
 *.cache
 *.data
 *.xpr
@@ -75,5 +78,5 @@ reconfig_mif
 *.xml
 *.hw
 gui
-.timestamp_altera
+.timestamp_intel
 

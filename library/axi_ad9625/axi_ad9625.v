@@ -41,7 +41,8 @@ module axi_ad9625 #(
   parameter FPGA_TECHNOLOGY = 0,
   parameter FPGA_FAMILY = 0,
   parameter SPEED_GRADE = 0,
-  parameter DEV_PACKAGE = 0) (
+  parameter DEV_PACKAGE = 0,
+  parameter DELAY_REFCLK_FREQUENCY = 200) (
 
   // jesd interface
   // rx_clk is (line-rate/40)

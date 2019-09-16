@@ -46,6 +46,8 @@ module util_adxcvr #(
 
   parameter   integer QPLL_REFCLK_DIV = 1,
   parameter   integer QPLL_FBDIV_RATIO = 1,
+  parameter   [15:0]  POR_CFG = 16'b0000000000000110,
+  parameter   [15:0]  PPF0_CFG = 16'b0000011000000000,
   parameter   [26:0]  QPLL_CFG = 27'h0680181,
   parameter   [ 9:0]  QPLL_FBDIV =  10'b0000110000,
   parameter   [15:0]  QPLL_CFG0 = 16'b0011001100011100,
@@ -55,6 +57,10 @@ module util_adxcvr #(
   parameter   [15:0]  QPLL_CFG2_G3 = 16'b0000111111000000,
   parameter   [15:0]  QPLL_CFG3 = 16'b0000000100100000,
   parameter   [15:0]  QPLL_CFG4 = 16'b0000000000000011,
+  parameter   [15:0]  QPLL_CP_G3 = 10'b0000011111,
+  parameter   [15:0]  QPLL_LPF = 10'b0100110111,
+  parameter   [15:0]  QPLL_CP = 10'b0001111111,
+  parameter   [15:0]  GTY4_PPF0_CFG  = 16'b0000100000000000,
 
   // cpll-configuration
 
@@ -64,6 +70,10 @@ module util_adxcvr #(
   parameter   [15:0]  CPLL_CFG1 = 16'b0000000000100011,
   parameter   [15:0]  CPLL_CFG2 = 16'b0000000000000010,
   parameter   [15:0]  CPLL_CFG3 = 16'b0000000000000000,
+  parameter   [15:0]  GTY4_CH_HSPMUX        = 16'b0010000000100000,
+  parameter   integer GTY4_PREIQ_FREQ_BST   = 0,
+  parameter   [2:0]   GTY4_RTX_BUF_CML_CTRL = 3'b011,
+  parameter   [15:0]  GTY4_RXPI_CFG0        = 16'b0000000100000000,
 
   // tx-configuration
 
@@ -71,6 +81,9 @@ module util_adxcvr #(
   parameter   integer TX_OUT_DIV = 1,
   parameter   integer TX_CLK25_DIV = 20,
   parameter   integer TX_LANE_INVERT = 0,
+  parameter   [15:0]  TX_PI_BIASSET = 1,
+  parameter   [15:0]  TXPI_CFG = 16'b0000000001010100,
+  parameter   [15:0]  A_TXDIFFCTRL = 5'b10110,
 
   // rx-configuration
 
@@ -1122,6 +1135,8 @@ module util_adxcvr #(
     .XCVR_TYPE (XCVR_TYPE),
     .QPLL_REFCLK_DIV (QPLL_REFCLK_DIV),
     .QPLL_FBDIV_RATIO (QPLL_FBDIV_RATIO),
+    .POR_CFG (POR_CFG),
+    .PPF0_CFG (PPF0_CFG),
     .QPLL_CFG (QPLL_CFG),
     .QPLL_FBDIV (QPLL_FBDIV),
     .QPLL_CFG0 (QPLL_CFG0),
@@ -1130,7 +1145,11 @@ module util_adxcvr #(
     .QPLL_CFG2 (QPLL_CFG2),
     .QPLL_CFG2_G3 (QPLL_CFG2_G3),
     .QPLL_CFG3 (QPLL_CFG3),
-    .QPLL_CFG4 (QPLL_CFG4))
+    .QPLL_CP_G3 (QPLL_CP_G3),
+    .QPLL_LPF (QPLL_LPF),
+    .QPLL_CP (QPLL_CP),
+    .QPLL_CFG4 (QPLL_CFG4),
+    .GTY4_PPF0_CFG (GTY4_PPF0_CFG))
   i_xcm_0 (
     .qpll_ref_clk (qpll_ref_clk_0),
     .qpll_sel (qpll_sel_0),
@@ -1174,12 +1193,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 0) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 0) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 0) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_0 (
     .qpll2ch_clk (qpll2ch_clk_0),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_0),
@@ -1280,12 +1306,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 1) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 1) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 1) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_1 (
     .qpll2ch_clk (qpll2ch_clk_0),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_0),
@@ -1386,12 +1419,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 2) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 2) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 2) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_2 (
     .qpll2ch_clk (qpll2ch_clk_0),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_0),
@@ -1492,12 +1532,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 3) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 3) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 3) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_3 (
     .qpll2ch_clk (qpll2ch_clk_0),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_0),
@@ -1590,6 +1637,8 @@ module util_adxcvr #(
     .XCVR_TYPE (XCVR_TYPE),
     .QPLL_REFCLK_DIV (QPLL_REFCLK_DIV),
     .QPLL_FBDIV_RATIO (QPLL_FBDIV_RATIO),
+    .POR_CFG (POR_CFG),
+    .PPF0_CFG (PPF0_CFG),
     .QPLL_CFG (QPLL_CFG),
     .QPLL_FBDIV (QPLL_FBDIV),
     .QPLL_CFG0 (QPLL_CFG0),
@@ -1598,7 +1647,11 @@ module util_adxcvr #(
     .QPLL_CFG2 (QPLL_CFG2),
     .QPLL_CFG2_G3 (QPLL_CFG2_G3),
     .QPLL_CFG3 (QPLL_CFG3),
-    .QPLL_CFG4 (QPLL_CFG4))
+    .QPLL_CP_G3 (QPLL_CP_G3),
+    .QPLL_LPF (QPLL_LPF),
+    .QPLL_CP (QPLL_CP),
+    .QPLL_CFG4 (QPLL_CFG4),
+    .GTY4_PPF0_CFG (GTY4_PPF0_CFG))
   i_xcm_4 (
     .qpll_ref_clk (qpll_ref_clk_4),
     .qpll_sel (qpll_sel_4),
@@ -1642,12 +1695,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 4) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 4) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 4) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_4 (
     .qpll2ch_clk (qpll2ch_clk_4),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_4),
@@ -1748,12 +1808,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 5) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 5) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 5) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_5 (
     .qpll2ch_clk (qpll2ch_clk_4),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_4),
@@ -1854,12 +1921,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 6) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 6) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 6) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_6 (
     .qpll2ch_clk (qpll2ch_clk_4),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_4),
@@ -1960,12 +2034,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 7) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 7) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 7) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_7 (
     .qpll2ch_clk (qpll2ch_clk_4),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_4),
@@ -2058,6 +2139,8 @@ module util_adxcvr #(
     .XCVR_TYPE (XCVR_TYPE),
     .QPLL_REFCLK_DIV (QPLL_REFCLK_DIV),
     .QPLL_FBDIV_RATIO (QPLL_FBDIV_RATIO),
+    .POR_CFG (POR_CFG),
+    .PPF0_CFG (PPF0_CFG),
     .QPLL_CFG (QPLL_CFG),
     .QPLL_FBDIV (QPLL_FBDIV),
     .QPLL_CFG0 (QPLL_CFG0),
@@ -2066,7 +2149,11 @@ module util_adxcvr #(
     .QPLL_CFG2 (QPLL_CFG2),
     .QPLL_CFG2_G3 (QPLL_CFG2_G3),
     .QPLL_CFG3 (QPLL_CFG3),
-    .QPLL_CFG4 (QPLL_CFG4))
+    .QPLL_CP_G3 (QPLL_CP_G3),
+    .QPLL_LPF (QPLL_LPF),
+    .QPLL_CP (QPLL_CP),
+    .QPLL_CFG4 (QPLL_CFG4),
+    .GTY4_PPF0_CFG (GTY4_PPF0_CFG))
   i_xcm_8 (
     .qpll_ref_clk (qpll_ref_clk_8),
     .qpll_sel (qpll_sel_8),
@@ -2110,12 +2197,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 8) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 8) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 8) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_8 (
     .qpll2ch_clk (qpll2ch_clk_8),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_8),
@@ -2216,12 +2310,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 9) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 9) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 9) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_9 (
     .qpll2ch_clk (qpll2ch_clk_8),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_8),
@@ -2322,12 +2423,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 10) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 10) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 10) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_10 (
     .qpll2ch_clk (qpll2ch_clk_8),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_8),
@@ -2428,12 +2536,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 11) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 11) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 11) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_11 (
     .qpll2ch_clk (qpll2ch_clk_8),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_8),
@@ -2526,6 +2641,8 @@ module util_adxcvr #(
     .XCVR_TYPE (XCVR_TYPE),
     .QPLL_REFCLK_DIV (QPLL_REFCLK_DIV),
     .QPLL_FBDIV_RATIO (QPLL_FBDIV_RATIO),
+    .POR_CFG (POR_CFG),
+    .PPF0_CFG (PPF0_CFG),
     .QPLL_CFG (QPLL_CFG),
     .QPLL_FBDIV (QPLL_FBDIV),
     .QPLL_CFG0 (QPLL_CFG0),
@@ -2534,7 +2651,11 @@ module util_adxcvr #(
     .QPLL_CFG2 (QPLL_CFG2),
     .QPLL_CFG2_G3 (QPLL_CFG2_G3),
     .QPLL_CFG3 (QPLL_CFG3),
-    .QPLL_CFG4 (QPLL_CFG4))
+    .QPLL_CP_G3 (QPLL_CP_G3),
+    .QPLL_LPF (QPLL_LPF),
+    .QPLL_CP (QPLL_CP),
+    .QPLL_CFG4 (QPLL_CFG4),
+    .GTY4_PPF0_CFG (GTY4_PPF0_CFG))
   i_xcm_12 (
     .qpll_ref_clk (qpll_ref_clk_12),
     .qpll_sel (qpll_sel_12),
@@ -2578,12 +2699,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 12) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 12) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 12) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_12 (
     .qpll2ch_clk (qpll2ch_clk_12),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_12),
@@ -2684,12 +2812,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 13) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 13) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 13) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_13 (
     .qpll2ch_clk (qpll2ch_clk_12),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_12),
@@ -2790,12 +2925,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 14) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 14) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 14) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_14 (
     .qpll2ch_clk (qpll2ch_clk_12),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_12),
@@ -2896,12 +3038,19 @@ module util_adxcvr #(
     .TX_OUT_DIV (TX_OUT_DIV),
     .TX_CLK25_DIV (TX_CLK25_DIV),
     .TX_POLARITY ((TX_LANE_INVERT >> 15) & 1),
+    .TX_PI_BIASSET (TX_PI_BIASSET),
+    .TXPI_CFG (TXPI_CFG),
+    .A_TXDIFFCTRL (A_TXDIFFCTRL),
     .RX_OUT_DIV (RX_OUT_DIV),
     .RX_CLK25_DIV (RX_CLK25_DIV),
     .RX_DFE_LPM_CFG (RX_DFE_LPM_CFG),
     .RX_PMA_CFG (RX_PMA_CFG),
     .RX_CDR_CFG (RX_CDR_CFG),
-    .RX_POLARITY ((RX_LANE_INVERT >> 15) & 1))
+    .RX_POLARITY ((RX_LANE_INVERT >> 15) & 1),
+    .GTY4_CH_HSPMUX (GTY4_CH_HSPMUX),
+    .GTY4_PREIQ_FREQ_BST (GTY4_PREIQ_FREQ_BST),
+    .GTY4_RTX_BUF_CML_CTRL (GTY4_RTX_BUF_CML_CTRL),
+    .GTY4_RXPI_CFG0 (GTY4_RXPI_CFG0))
   i_xch_15 (
     .qpll2ch_clk (qpll2ch_clk_12),
     .qpll2ch_ref_clk (qpll2ch_ref_clk_12),

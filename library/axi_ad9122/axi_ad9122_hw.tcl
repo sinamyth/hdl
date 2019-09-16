@@ -3,7 +3,7 @@ package require qsys
 package require quartus::device
 
 source ../scripts/adi_env.tcl
-source ../scripts/adi_ip_alt.tcl
+source ../scripts/adi_ip_intel.tcl
 
 ad_ip_create axi_ad9122 {AXI AD9122 Interface}
 set_module_property VALIDATION_CALLBACK info_param_validate
@@ -15,7 +15,7 @@ ad_ip_files axi_ad9122 [list \
     $ad_hdl_dir/library/common/ad_dds_2.v \
     $ad_hdl_dir/library/common/ad_dds_1.v \
     $ad_hdl_dir/library/common/ad_dds.v \
-    $ad_hdl_dir/library/altera/common/ad_mul.v \
+    $ad_hdl_dir/library/intel/common/ad_mul.v \
     $ad_hdl_dir/library/common/ad_rst.v \
     $ad_hdl_dir/library/common/up_axi.v \
     $ad_hdl_dir/library/common/up_xfer_cntrl.v \
@@ -27,10 +27,10 @@ ad_ip_files axi_ad9122 [list \
     axi_ad9122_core.v \
     axi_ad9122_if.v \
     axi_ad9122.v \
-    $ad_hdl_dir/library/altera/common/up_xfer_cntrl_constr.sdc \
-    $ad_hdl_dir/library/altera/common/up_xfer_status_constr.sdc \
-    $ad_hdl_dir/library/altera/common/up_clock_mon_constr.sdc \
-    $ad_hdl_dir/library/altera/common/up_rst_constr.sdc \
+    $ad_hdl_dir/library/intel/common/up_xfer_cntrl_constr.sdc \
+    $ad_hdl_dir/library/intel/common/up_xfer_status_constr.sdc \
+    $ad_hdl_dir/library/intel/common/up_clock_mon_constr.sdc \
+    $ad_hdl_dir/library/intel/common/up_rst_constr.sdc \
     axi_ad9122_constr.sdc] \
     axi_ad9122_fileset
 
@@ -76,7 +76,7 @@ add_interface_port device_if dac_sync_in  dac_sync_in  Input 1
 
 # dma interface
 
-ad_alt_intf clock dac_div_clk Output 1
+ad_interface clock dac_div_clk Output 1
 
 add_interface dac_ch_0 conduit end
 add_interface_port dac_ch_0 dac_valid_0   valid  Output 1
@@ -92,17 +92,17 @@ add_interface_port dac_ch_1 dac_ddata_1   data   Input 64
 set_interface_property dac_ch_1 associatedClock if_dac_div_clk
 set_interface_property dac_ch_1 associatedReset none
 
-ad_alt_intf signal dac_dunf input 1 unf
+ad_interface signal dac_dunf input 1 unf
 
 # SERDES instances and configurations
 
-add_hdl_instance ad_serdes_clk_core_tx alt_serdes
+add_hdl_instance ad_serdes_clk_core_tx intel_serdes
 set_instance_parameter_value ad_serdes_clk_core_tx {MODE} {CLK}
 set_instance_parameter_value ad_serdes_clk_core_tx {DDR_OR_SDR_N} {1}
 set_instance_parameter_value ad_serdes_clk_core_tx {SERDES_FACTOR} {8}
 set_instance_parameter_value ad_serdes_clk_core_tx {CLKIN_FREQUENCY} {500.0}
 
-add_hdl_instance ad_serdes_out_core alt_serdes
+add_hdl_instance ad_serdes_out_core intel_serdes
 set_instance_parameter_value ad_serdes_out_core {MODE} {OUT}
 set_instance_parameter_value ad_serdes_out_core {DDR_OR_SDR_N} {1}
 set_instance_parameter_value ad_serdes_out_core {SERDES_FACTOR} {8}

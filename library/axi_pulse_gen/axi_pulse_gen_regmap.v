@@ -49,7 +49,7 @@ module axi_pulse_gen_regmap #(
 
   // control and status signals
 
-  output                  clk,
+  output                  clk_out,
   output                  pulse_gen_resetn,
   output      [31:0]      pulse_width,
   output      [31:0]      pulse_period,
@@ -87,19 +87,19 @@ module axi_pulse_gen_regmap #(
       up_reset <= 1'b1;
     end else begin
       up_wack <= up_wreq;
-      if ((up_wreq == 1'b1) && (up_waddr[3:0] == 4'h2)) begin
+      if ((up_wreq == 1'b1) && (up_waddr == 14'h2)) begin
         up_scratch <= up_wdata;
       end
-      if ((up_wreq == 1'b1) && (up_waddr[3:0] == 4'h4)) begin
+      if ((up_wreq == 1'b1) && (up_waddr == 14'h4)) begin
         up_reset <= up_wdata[0];
         up_load_config <= up_wdata[1];
       end else begin
         up_load_config <= 1'b0;
       end
-      if ((up_wreq == 1'b1) && (up_waddr[3:0] == 4'h5)) begin
+      if ((up_wreq == 1'b1) && (up_waddr == 14'h5)) begin
         up_pulse_period <= up_wdata;
       end
-      if ((up_wreq == 1'b1) && (up_waddr[3:0] == 4'h6)) begin
+      if ((up_wreq == 1'b1) && (up_waddr == 14'h6)) begin
         up_pulse_width <= up_wdata;
       end
     end
@@ -112,14 +112,14 @@ module axi_pulse_gen_regmap #(
     end else begin
       up_rack <= up_rreq;
       if (up_rreq == 1'b1) begin
-        case (up_raddr[3:0])
-          4'h0: up_rdata <= CORE_VERSION;
-          4'h1: up_rdata <= ID;
-          4'h2: up_rdata <= up_scratch;
-          4'h3: up_rdata <= CORE_MAGIC;
-          4'h4: up_rdata <= up_reset;
-          4'h5: up_rdata <= up_pulse_period;
-          4'h6: up_rdata <= up_pulse_width;
+        case (up_raddr)
+          14'h0: up_rdata <= CORE_VERSION;
+          14'h1: up_rdata <= ID;
+          14'h2: up_rdata <= up_scratch;
+          14'h3: up_rdata <= CORE_MAGIC;
+          14'h4: up_rdata <= up_reset;
+          14'h5: up_rdata <= up_pulse_period;
+          14'h6: up_rdata <= up_pulse_width;
           default: up_rdata <= 0;
         endcase
       end else begin
@@ -131,11 +131,11 @@ module axi_pulse_gen_regmap #(
   generate
   if (ASYNC_CLK_EN) begin : counter_external_clock
 
-    assign clk = ext_clk;
+    assign clk_out = ext_clk;
 
     ad_rst i_d_rst_reg (
       .rst_async (up_reset),
-      .clk (clk),
+      .clk (clk_out),
       .rstn (pulse_gen_resetn),
       .rst ());
 
@@ -145,7 +145,7 @@ module axi_pulse_gen_regmap #(
     i_pulse_period_sync (
       .in_clk (up_clk),
       .in_data (up_pulse_period),
-      .out_clk (clk),
+      .out_clk (clk_out),
       .out_data (pulse_period));
 
     sync_data #(
@@ -154,7 +154,7 @@ module axi_pulse_gen_regmap #(
     i_pulse_width_sync (
       .in_clk (up_clk),
       .in_data (up_pulse_width),
-      .out_clk (clk),
+      .out_clk (clk_out),
       .out_data (pulse_width));
 
     sync_event #(
@@ -163,12 +163,12 @@ module axi_pulse_gen_regmap #(
     i_load_config_sync (
       .in_clk (up_clk),
       .in_event (up_load_config),
-      .out_clk (clk),
+      .out_clk (clk_out),
       .out_event (load_config));
 
   end else begin : counter_sys_clock        // counter is running on system clk
 
-    assign clk = up_clk;
+    assign clk_out = up_clk;
     assign pulse_gen_resetn = ~up_reset;
     assign pulse_period = up_pulse_period;
     assign pulse_width = up_pulse_width;

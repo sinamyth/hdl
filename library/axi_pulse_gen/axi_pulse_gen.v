@@ -104,7 +104,7 @@ module axi_pulse_gen #(
     .PULSE_PERIOD (PULSE_PERIOD))
   i_regmap (
     .ext_clk (ext_clk),
-    .clk (clk),
+    .clk_out (clk),
     .pulse_gen_resetn (pulse_gen_resetn),
     .pulse_width (pulse_width_s),
     .pulse_period (pulse_period_s),
@@ -132,7 +132,7 @@ module axi_pulse_gen #(
     .pulse (pulse));
 
   up_axi #(
-    .ADDRESS_WIDTH(14))
+    .AXI_ADDRESS_WIDTH(16))
   i_up_axi (
     .up_rstn (up_rstn),
     .up_clk (up_clk),

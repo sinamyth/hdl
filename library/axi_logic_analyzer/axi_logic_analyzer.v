@@ -35,7 +35,13 @@
 
 `timescale 1ns/100ps
 
-module axi_logic_analyzer (
+module axi_logic_analyzer #(
+
+  // add sample delays on LA to compensate for adc path delay
+
+  parameter ADC_PATH_DELAY = 19) (
+
+  // interface
 
   input                 clk,
   output                clk_out,
@@ -45,14 +51,16 @@ module axi_logic_analyzer (
   output      [15:0]    data_t,
   input       [ 1:0]    trigger_i,
 
-  output reg            adc_valid,
+  output                adc_valid,
   output      [15:0]    adc_data,
 
   input       [15:0]    dac_data,
   input                 dac_valid,
   output reg            dac_read,
 
+  input                 trigger_in,
   output                trigger_out,
+  output                trigger_out_adc,
   output      [31:0]    fifo_depth,
 
   // axi interface
@@ -81,10 +89,8 @@ module axi_logic_analyzer (
 
   // internal registers
 
-  reg     [15:0]    data_m1 = 'd0;
   reg     [15:0]    data_r = 'd0;
   reg     [ 1:0]    trigger_m1 = 'd0;
-  reg     [ 1:0]    trigger_m2 = 'd0;
   reg     [31:0]    downsampler_counter_la = 'd0;
   reg     [31:0]    upsampler_counter_pg = 'd0;
 
@@ -106,7 +112,7 @@ module axi_logic_analyzer (
 
   reg               streaming_on;
 
-  reg     [15:0]    adc_data_m2 = 'd0;
+  reg     [15:0]    adc_data_mn = 'd0;
 
   // internal signals
 
@@ -131,7 +137,7 @@ module axi_logic_analyzer (
   wire    [17:0]    fall_edge_enable;
   wire    [17:0]    low_level_enable;
   wire    [17:0]    high_level_enable;
-  wire              trigger_logic; // 0-OR,1-AND,2-XOR,3-NOR,4-NAND,5-NXOR
+  wire    [ 6:0]    trigger_logic; // 0-OR,1-AND
   wire              clock_select;
   wire    [15:0]    overwrite_enable;
   wire    [15:0]    overwrite_data;
@@ -155,7 +161,7 @@ module axi_logic_analyzer (
   assign trigger_out = trigger_delay == 32'h0 ? trigger_out_s | streaming_on : trigger_out_delayed | streaming_on;
   assign trigger_out_delayed = delay_counter == 32'h0 ? 1 : 0;
 
-  assign adc_data = adc_data_m2;
+  assign adc_data = adc_data_mn;
 
  always @(posedge clk_out) begin
     if (trigger_delay == 0) begin
@@ -217,27 +223,38 @@ module axi_logic_analyzer (
     .I1 (data_i[0]),
     .S (clock_select));
 
-  // synchronization
+  // - synchronization
+  // - compensate for m2k adc path delay
+  // - transfer data at clock frequency if capture is enabled
 
-  always @(posedge clk_out) begin
-    if (sample_valid_la == 1'b1) begin
-      data_m1 <= data_i;
-      trigger_m1 <= trigger_i;
-      trigger_m2 <= trigger_m1;
+  genvar j;
+
+  generate
+
+    reg [15:0] data_m[ADC_PATH_DELAY-2:0];
+
+    always @(posedge clk_out) begin
+      if (sample_valid_la == 1'b1) begin
+        data_m[0] <= data_i;
+      end
     end
-  end
 
-  // transfer data at clock frequency
-  // if capture is enabled
-
-  always @(posedge clk_out) begin
-    if (sample_valid_la == 1'b1) begin
-      adc_data_m2  <= data_m1;
-      adc_valid <= 1'b1;
-    end else begin
-      adc_valid <= 1'b0;
+    for (j = 0; j < ADC_PATH_DELAY - 2; j = j + 1) begin
+      always @(posedge clk_out) begin
+        if (sample_valid_la == 1'b1) begin
+          data_m[j+1] <= data_m[j];
+        end
+      end
     end
-  end
+
+    always @(posedge clk_out) begin
+      if (sample_valid_la == 1'b1) begin
+        adc_data_mn <= data_m[ADC_PATH_DELAY-2];
+      end
+    end
+  endgenerate
+
+  assign adc_valid = sample_valid_la;
 
   // downsampler logic analyzer
 
@@ -295,9 +312,10 @@ module axi_logic_analyzer (
     .clk (clk_out),
     .reset (reset),
 
-    .data (adc_data_m2),
+    .data (adc_data_mn),
     .data_valid(sample_valid_la),
-    .trigger (trigger_m2),
+    .trigger_i (trigger_m1),
+    .trigger_in (trigger_in),
 
     .edge_detect_enable (edge_detect_enable),
     .rise_edge_enable (rise_edge_enable),
@@ -305,6 +323,7 @@ module axi_logic_analyzer (
     .low_level_enable (low_level_enable),
     .high_level_enable (high_level_enable),
     .trigger_logic (trigger_logic),
+    .trigger_out_adc (trigger_out_adc),
     .trigger_out (trigger_out_s));
 
    axi_logic_analyzer_reg i_registers (
@@ -327,7 +346,7 @@ module axi_logic_analyzer (
     .clock_select (clock_select),
     .overwrite_enable (overwrite_enable),
     .overwrite_data (overwrite_data),
-    .input_data (adc_data_m2),
+    .input_data (adc_data_mn),
     .od_pp_n (od_pp_n),
 
     .triggered (up_triggered),
@@ -350,8 +369,7 @@ module axi_logic_analyzer (
   // axi interface
 
   up_axi #(
-    .AXI_ADDRESS_WIDTH(7),
-    .ADDRESS_WIDTH(5)
+    .AXI_ADDRESS_WIDTH(7)
   ) i_up_axi (
     .up_rstn (up_rstn),
     .up_clk (up_clk),

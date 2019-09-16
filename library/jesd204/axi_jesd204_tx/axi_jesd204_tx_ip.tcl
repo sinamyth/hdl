@@ -43,17 +43,20 @@
 #
 
 source ../../scripts/adi_env.tcl
-source $ad_hdl_dir/library/scripts/adi_ip.tcl
+source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 
 adi_ip_create axi_jesd204_tx
 adi_ip_files axi_jesd204_tx [list \
   "../../common/up_axi.v" \
   "axi_jesd204_tx_constr.xdc" \
+  "axi_jesd204_tx_ooc.ttcl" \
   "jesd204_up_tx.v" \
   "axi_jesd204_tx.v" \
 ]
 
 adi_ip_properties axi_jesd204_tx
+
+adi_ip_ttcl axi_jesd204_tx "axi_jesd204_tx_ooc.ttcl"
 
 set_property PROCESSING_ORDER LATE [ipx::get_files axi_jesd204_tx_constr.xdc \
   -of_objects [ipx::get_file_groups -of_objects [ipx::current_core] \

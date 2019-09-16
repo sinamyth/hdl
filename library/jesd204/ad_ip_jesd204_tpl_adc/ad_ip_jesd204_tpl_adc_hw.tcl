@@ -23,7 +23,7 @@
 
 package require qsys
 source ../../scripts/adi_env.tcl
-source ../../scripts/adi_ip_alt.tcl
+source ../../scripts/adi_ip_intel.tcl
 
 ad_ip_create ad_ip_jesd204_tpl_adc "JESD204 Transport Layer for ADCs" p_ad_ip_jesd204_tpl_adc_elab
 set_module_property VALIDATION_CALLBACK p_ad_ip_jesd204_tpl_adc_validate
@@ -39,16 +39,17 @@ ad_ip_files ad_ip_jesd204_tpl_adc [list \
   $ad_hdl_dir/library/common/up_adc_common.v \
   $ad_hdl_dir/library/common/up_adc_channel.v \
   $ad_hdl_dir/library/common/ad_xcvr_rx_if.v \
+  $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_common/up_tpl_common.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_adc/ad_ip_jesd204_tpl_adc_regmap.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_adc/ad_ip_jesd204_tpl_adc_pnmon.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_adc/ad_ip_jesd204_tpl_adc_channel.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_adc/ad_ip_jesd204_tpl_adc_core.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_adc/ad_ip_jesd204_tpl_adc_deframer.v \
   $ad_hdl_dir/library/jesd204/ad_ip_jesd204_tpl_adc/ad_ip_jesd204_tpl_adc.v \
-  $ad_hdl_dir/library/altera/common/up_xfer_cntrl_constr.sdc \
-  $ad_hdl_dir/library/altera/common/up_xfer_status_constr.sdc \
-  $ad_hdl_dir/library/altera/common/up_clock_mon_constr.sdc \
-  $ad_hdl_dir/library/altera/common/up_rst_constr.sdc]
+  $ad_hdl_dir/library/intel/common/up_xfer_cntrl_constr.sdc \
+  $ad_hdl_dir/library/intel/common/up_xfer_status_constr.sdc \
+  $ad_hdl_dir/library/intel/common/up_clock_mon_constr.sdc \
+  $ad_hdl_dir/library/intel/common/up_rst_constr.sdc]
 
 # parameters
 
@@ -161,7 +162,7 @@ ad_ip_intf_s_axi s_axi_aclk s_axi_aresetn
 
 add_interface link_clk clock end
 add_interface_port link_clk link_clk clk Input 1
-ad_alt_intf signal link_sof input 4 export
+ad_interface signal link_sof input 4 export
 
 # We don't expect too large values for a and b, trivial implementation will do
 proc gcd {a b} {
@@ -263,5 +264,5 @@ proc p_ad_ip_jesd204_tpl_adc_elab {} {
     set_interface_property adc_ch_$i associatedClock link_clk
   }
 
-  ad_alt_intf signal  adc_dovf  input  1 ovf
+  ad_interface signal  adc_dovf  input  1 ovf
 }

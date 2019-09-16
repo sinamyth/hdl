@@ -23,7 +23,7 @@
 
 package require qsys
 source ../../scripts/adi_env.tcl
-source ../../scripts/adi_ip_alt.tcl
+source ../../scripts/adi_ip_intel.tcl
 
 ad_ip_create util_upack2 {Channel Unpack Utility v2} util_upack_elab
 ad_ip_files util_upack2_impl [list \
@@ -74,21 +74,24 @@ proc util_upack_elab {} {
   # This is a temporary hack and should be removed once all projects have been
   # updated to use the AXI streaming interface to connect the the upack
   if {$interface_type == 0} {
-    ad_alt_intf signal s_axis_valid input 1 valid
-    ad_alt_intf signal s_axis_ready output 1 ready
-    ad_alt_intf signal s_axis_data input $total_data_width data
+    add_interface s_axis axi4stream end
+    set_interface_property s_axis associatedClock clk
+    set_interface_property s_axis associatedReset reset
+    add_interface_port  s_axis  s_axis_valid tvalid  Input   1
+    add_interface_port  s_axis  s_axis_ready tready  Output  1
+    add_interface_port  s_axis  s_axis_data  tdata   Input   $total_data_width
   } else {
-    ad_alt_intf signal packed_fifo_rd_en output 1 valid
+    ad_interface signal packed_fifo_rd_en output 1 valid
     set_port_property packed_fifo_rd_en fragment_list "s_axis_ready"
-    ad_alt_intf signal packed_fifo_rd_data input $total_data_width data
+    ad_interface signal packed_fifo_rd_data input $total_data_width data
     set_port_property packed_fifo_rd_data fragment_list \
       [format "s_axis_data(%d:0)" [expr $total_data_width - 1]]
-    ad_alt_intf signal s_axis_valid input 1 valid
+    ad_interface signal s_axis_valid input 1 valid
     set_port_property s_axis_valid TERMINATION TRUE
     set_port_property s_axis_valid TERMINATION_VALUE 1
   }
 
-  ad_alt_intf signal fifo_rd_underflow output 1 unf
+  ad_interface signal fifo_rd_underflow output 1 unf
 
   for {set n 0} {$n < $num_channels} {incr n} {
     add_interface dac_ch_${n} conduit end
@@ -99,7 +102,7 @@ proc util_upack_elab {} {
     set_port_property fifo_rd_en_${n} fragment_list "fifo_rd_en(${n})"
     add_interface_port dac_ch_${n} fifo_rd_valid_${n} data_valid Output 1
     set_port_property fifo_rd_valid_${n} fragment_list "fifo_rd_valid(0)"
-    add_interface_port dac_ch_${n} fifo_rd_data_${n} data Output $channel_data_width 
+    add_interface_port dac_ch_${n} fifo_rd_data_${n} data Output $channel_data_width
     set_port_property fifo_rd_data_${n} fragment_list [format "fifo_rd_data(%d:%d)" \
       [expr ($n+1) * $channel_data_width - 1] [expr $n * $channel_data_width]]
     set_interface_property dac_ch_${n} associatedClock clk

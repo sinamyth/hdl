@@ -28,10 +28,13 @@ set dac_data_width [expr 32*$TX_NUM_OF_LANES]
 set dac_dma_data_width 128
 
 source $ad_hdl_dir/library/jesd204/scripts/jesd204.tcl
+source $ad_hdl_dir/projects/common/xilinx/adi_fir_filter_bd.tcl
 
 # ad9371
 
 create_bd_port -dir I dac_fifo_bypass
+create_bd_port -dir I adc_fir_filter_active
+create_bd_port -dir I dac_fir_filter_active
 
 # dac peripherals
 
@@ -57,6 +60,9 @@ ad_ip_instance util_upack2 util_ad9371_tx_upack [list \
   SAMPLES_PER_CHANNEL $TX_SAMPLES_PER_CHANNEL \
   SAMPLE_DATA_WIDTH $TX_SAMPLE_WIDTH \
 ]
+
+ad_add_interpolation_filter "tx_fir_interpolator" 8 $TX_NUM_OF_CONVERTERS 2 {122.88} {15.36} \
+                            "$ad_hdl_dir/library/util_fir_int/coefile_int.coe"
 
 adi_tpl_jesd204_tx_create tx_ad9371_tpl_core $TX_NUM_OF_LANES \
                                              $TX_NUM_OF_CONVERTERS \
@@ -120,6 +126,9 @@ ad_ip_parameter axi_ad9371_rx_dma CONFIG.ASYNC_CLK_REQ_SRC 1
 ad_ip_parameter axi_ad9371_rx_dma CONFIG.DMA_2D_TRANSFER 0
 ad_ip_parameter axi_ad9371_rx_dma CONFIG.DMA_DATA_WIDTH_SRC [expr 32*$RX_NUM_OF_LANES]
 
+ad_add_decimation_filter "rx_fir_decimator" 8 $RX_NUM_OF_CONVERTERS 1 {122.88} {122.88} \
+                         "$ad_hdl_dir/library/util_fir_int/coefile_int.coe"
+
 # adc-os peripherals
 
 ad_ip_instance axi_clkgen axi_ad9371_rx_os_clkgen
@@ -179,64 +188,47 @@ ad_ip_parameter util_ad9371_xcvr CONFIG.QPLL_FBDIV 0x120
 
 # xcvr interfaces
 
-set tx_offset 0
-set rx_offset 0
-set rx_obs_offset  $RX_NUM_OF_LANES
-
-set tx_ref_clk     tx_ref_clk_$tx_offset
-set rx_ref_clk     rx_ref_clk_$rx_offset
-set rx_obs_ref_clk rx_ref_clk_$rx_obs_offset
+set tx_ref_clk     tx_ref_clk_0
+set rx_ref_clk     rx_ref_clk_0
+set rx_obs_ref_clk rx_ref_clk_$RX_NUM_OF_LANES
 
 create_bd_port -dir I $tx_ref_clk
 create_bd_port -dir I $rx_ref_clk
 create_bd_port -dir I $rx_obs_ref_clk
-ad_connect  sys_cpu_resetn util_ad9371_xcvr/up_rstn
-ad_connect  sys_cpu_clk util_ad9371_xcvr/up_clk
+ad_connect  $sys_cpu_resetn util_ad9371_xcvr/up_rstn
+ad_connect  $sys_cpu_clk util_ad9371_xcvr/up_clk
 
 # Tx
-ad_xcvrcon  util_ad9371_xcvr axi_ad9371_tx_xcvr axi_ad9371_tx_jesd {1 2 3 0}
-ad_reconct  util_ad9371_xcvr/tx_out_clk_0 axi_ad9371_tx_clkgen/clk
-for {set i 0} {$i < $TX_NUM_OF_LANES} {incr i} {
-  ad_connect  axi_ad9371_tx_clkgen/clk_0 util_ad9371_xcvr/tx_clk_$i
-}
+ad_connect  ad9371_tx_device_clk axi_ad9371_tx_clkgen/clk_0
+ad_xcvrcon  util_ad9371_xcvr axi_ad9371_tx_xcvr axi_ad9371_tx_jesd {1 2 3 0} ad9371_tx_device_clk
+ad_connect  util_ad9371_xcvr/tx_out_clk_0 axi_ad9371_tx_clkgen/clk
 ad_xcvrpll  $tx_ref_clk util_ad9371_xcvr/qpll_ref_clk_0
 ad_xcvrpll  axi_ad9371_tx_xcvr/up_pll_rst util_ad9371_xcvr/up_qpll_rst_0
-ad_connect  axi_ad9371_tx_clkgen/clk_0 axi_ad9371_tx_jesd/device_clk
-ad_connect  axi_ad9371_tx_clkgen/clk_0 axi_ad9371_tx_jesd_rstgen/slowest_sync_clk
 
 # Rx
-ad_xcvrcon  util_ad9371_xcvr axi_ad9371_rx_xcvr axi_ad9371_rx_jesd
-ad_reconct  util_ad9371_xcvr/rx_out_clk_$rx_offset axi_ad9371_rx_clkgen/clk
+ad_connect  ad9371_rx_device_clk axi_ad9371_rx_clkgen/clk_0
+ad_xcvrcon  util_ad9371_xcvr axi_ad9371_rx_xcvr axi_ad9371_rx_jesd {} ad9371_rx_device_clk
+ad_connect  util_ad9371_xcvr/rx_out_clk_0 axi_ad9371_rx_clkgen/clk
 for {set i 0} {$i < $RX_NUM_OF_LANES} {incr i} {
-  set ch [expr $rx_offset+$i]
-  ad_connect  axi_ad9371_rx_clkgen/clk_0 util_ad9371_xcvr/rx_clk_$ch
+  set ch [expr $i]
   ad_xcvrpll  $rx_ref_clk util_ad9371_xcvr/cpll_ref_clk_$ch
   ad_xcvrpll  axi_ad9371_rx_xcvr/up_pll_rst util_ad9371_xcvr/up_cpll_rst_$ch
 }
-ad_connect  axi_ad9371_rx_clkgen/clk_0 axi_ad9371_rx_jesd/device_clk
-ad_connect  axi_ad9371_rx_clkgen/clk_0 axi_ad9371_rx_jesd_rstgen/slowest_sync_clk
 
 # Rx - OBS
-ad_xcvrcon  util_ad9371_xcvr axi_ad9371_rx_os_xcvr axi_ad9371_rx_os_jesd
-ad_reconct  util_ad9371_xcvr/rx_out_clk_$rx_obs_offset axi_ad9371_rx_os_clkgen/clk
+ad_connect  ad9371_rx_os_device_clk axi_ad9371_rx_os_clkgen/clk_0
+ad_xcvrcon  util_ad9371_xcvr axi_ad9371_rx_os_xcvr axi_ad9371_rx_os_jesd {} ad9371_rx_os_device_clk
+ad_connect  util_ad9371_xcvr/rx_out_clk_$RX_NUM_OF_LANES axi_ad9371_rx_os_clkgen/clk
 for {set i 0} {$i < $RX_OS_NUM_OF_LANES} {incr i} {
-  set ch [expr $rx_obs_offset+$i]
-  ad_connect  axi_ad9371_rx_os_clkgen/clk_0 util_ad9371_xcvr/rx_clk_$ch
+  # channel indexing starts from the last RX
+  set ch [expr $RX_NUM_OF_LANES + $i]
   ad_xcvrpll  $rx_obs_ref_clk util_ad9371_xcvr/cpll_ref_clk_$ch
   ad_xcvrpll  axi_ad9371_rx_os_xcvr/up_pll_rst util_ad9371_xcvr/up_cpll_rst_$ch
 }
-ad_connect  axi_ad9371_rx_os_clkgen/clk_0 axi_ad9371_rx_os_jesd/device_clk
-ad_connect  axi_ad9371_rx_os_clkgen/clk_0 axi_ad9371_rx_os_jesd_rstgen/slowest_sync_clk
 
 # dma clock & reset
 
-ad_ip_instance proc_sys_reset sys_dma_rstgen
-ad_ip_parameter sys_dma_rstgen CONFIG.C_EXT_RST_WIDTH 1
-
-ad_connect  sys_dma_clk sys_dma_rstgen/slowest_sync_clk
-ad_connect  sys_dma_resetn sys_dma_rstgen/peripheral_aresetn
-ad_connect  sys_dma_reset sys_dma_rstgen/peripheral_reset
-ad_connect  sys_dma_reset axi_ad9371_dacfifo/dma_rst
+ad_connect  $sys_dma_reset axi_ad9371_dacfifo/dma_rst
 
 # connections (dac)
 
@@ -244,24 +236,40 @@ ad_connect  axi_ad9371_tx_clkgen/clk_0 tx_ad9371_tpl_core/link_clk
 ad_connect  axi_ad9371_tx_jesd/tx_data tx_ad9371_tpl_core/link
 
 ad_connect  axi_ad9371_tx_clkgen/clk_0 util_ad9371_tx_upack/clk
-ad_connect  axi_ad9371_tx_jesd_rstgen/peripheral_reset util_ad9371_tx_upack/reset
-
-ad_connect  tx_ad9371_tpl_core/dac_valid_0 util_ad9371_tx_upack/fifo_rd_en
-for {set i 0} {$i < $TX_NUM_OF_CONVERTERS} {incr i} {
-  ad_connect  util_ad9371_tx_upack/fifo_rd_data_$i tx_ad9371_tpl_core/dac_data_$i
-  ad_connect  tx_ad9371_tpl_core/dac_enable_$i  util_ad9371_tx_upack/enable_$i
-}
+ad_connect  ad9371_tx_device_clk_rstgen/peripheral_reset util_ad9371_tx_upack/reset
 
 ad_connect  axi_ad9371_tx_clkgen/clk_0 axi_ad9371_dacfifo/dac_clk
-ad_connect  axi_ad9371_tx_jesd_rstgen/peripheral_reset axi_ad9371_dacfifo/dac_rst
+ad_connect  ad9371_tx_device_clk_rstgen/peripheral_reset axi_ad9371_dacfifo/dac_rst
+
+ad_connect tx_fir_interpolator/aclk axi_ad9371_tx_clkgen/clk_0
+
+for {set i 0} {$i < $TX_NUM_OF_CONVERTERS} {incr i} {
+  ad_connect  tx_ad9371_tpl_core/dac_enable_$i  tx_fir_interpolator/dac_enable_$i
+  ad_connect  tx_ad9371_tpl_core/dac_valid_$i  tx_fir_interpolator/dac_valid_$i
+
+  ad_connect  util_ad9371_tx_upack/fifo_rd_data_$i  tx_fir_interpolator/data_in_${i}
+  ad_connect  util_ad9371_tx_upack/enable_$i  tx_fir_interpolator/enable_out_${i}
+
+  ad_connect  tx_fir_interpolator/data_out_${i}  tx_ad9371_tpl_core/dac_data_$i
+}
+
+ad_ip_instance util_vector_logic logic_or [list \
+  C_OPERATION {or} \
+  C_SIZE 1]
+
+ad_connect  logic_or/Op1  tx_fir_interpolator/valid_out_0
+ad_connect  logic_or/Op2  tx_fir_interpolator/valid_out_2
+ad_connect  logic_or/Res  util_ad9371_tx_upack/fifo_rd_en
+
+ad_connect  tx_fir_interpolator/active dac_fir_filter_active
 
 # TODO: Add streaming AXI interface for DAC FIFO
 ad_connect  util_ad9371_tx_upack/s_axis_valid VCC
 ad_connect  util_ad9371_tx_upack/s_axis_ready axi_ad9371_dacfifo/dac_valid
 ad_connect  util_ad9371_tx_upack/s_axis_data axi_ad9371_dacfifo/dac_data
 
-ad_connect  sys_dma_clk axi_ad9371_dacfifo/dma_clk
-ad_connect  sys_dma_clk axi_ad9371_tx_dma/m_axis_aclk
+ad_connect  $sys_dma_clk axi_ad9371_dacfifo/dma_clk
+ad_connect  $sys_dma_clk axi_ad9371_tx_dma/m_axis_aclk
 ad_connect  axi_ad9371_dacfifo/dma_valid axi_ad9371_tx_dma/m_axis_valid
 ad_connect  axi_ad9371_dacfifo/dma_data axi_ad9371_tx_dma/m_axis_data
 ad_connect  axi_ad9371_dacfifo/dma_ready axi_ad9371_tx_dma/m_axis_ready
@@ -269,7 +277,7 @@ ad_connect  axi_ad9371_dacfifo/dma_xfer_req axi_ad9371_tx_dma/m_axis_xfer_req
 ad_connect  axi_ad9371_dacfifo/dma_xfer_last axi_ad9371_tx_dma/m_axis_last
 ad_connect  axi_ad9371_dacfifo/dac_dunf tx_ad9371_tpl_core/dac_dunf
 ad_connect  axi_ad9371_dacfifo/bypass dac_fifo_bypass
-ad_connect  sys_dma_resetn axi_ad9371_tx_dma/m_src_axi_aresetn
+ad_connect  $sys_dma_resetn axi_ad9371_tx_dma/m_src_axi_aresetn
 
 # connections (adc)
 
@@ -278,18 +286,27 @@ ad_connect  axi_ad9371_rx_jesd/rx_sof rx_ad9371_tpl_core/link_sof
 ad_connect  axi_ad9371_rx_jesd/rx_data_tdata rx_ad9371_tpl_core/link_data
 ad_connect  axi_ad9371_rx_jesd/rx_data_tvalid rx_ad9371_tpl_core/link_valid
 ad_connect  axi_ad9371_rx_clkgen/clk_0 util_ad9371_rx_cpack/clk
-ad_connect  axi_ad9371_rx_jesd_rstgen/peripheral_reset util_ad9371_rx_cpack/reset
+ad_connect  ad9371_rx_device_clk_rstgen/peripheral_reset util_ad9371_rx_cpack/reset
 
-ad_connect rx_ad9371_tpl_core/adc_valid_0 util_ad9371_rx_cpack/fifo_wr_en
+ad_connect rx_fir_decimator/aclk axi_ad9371_rx_clkgen/clk_0
+
 for {set i 0} {$i < $RX_NUM_OF_CONVERTERS} {incr i} {
-  ad_connect  rx_ad9371_tpl_core/adc_enable_$i util_ad9371_rx_cpack/enable_$i
-  ad_connect  rx_ad9371_tpl_core/adc_data_$i util_ad9371_rx_cpack/fifo_wr_data_$i
+  ad_connect  rx_ad9371_tpl_core/adc_valid_$i rx_fir_decimator/valid_in_$i
+  ad_connect  rx_ad9371_tpl_core/adc_enable_$i rx_fir_decimator/enable_in_$i
+  ad_connect  rx_ad9371_tpl_core/adc_data_$i rx_fir_decimator/data_in_${i}
+
+  ad_connect  rx_fir_decimator/enable_out_$i util_ad9371_rx_cpack/enable_$i
+  ad_connect  rx_fir_decimator/data_out_${i} util_ad9371_rx_cpack/fifo_wr_data_$i
 }
+
+ad_connect  rx_fir_decimator/valid_out_0 util_ad9371_rx_cpack/fifo_wr_en
 ad_connect  rx_ad9371_tpl_core/adc_dovf util_ad9371_rx_cpack/fifo_wr_overflow
+
+ad_connect rx_fir_decimator/active adc_fir_filter_active
 
 ad_connect  axi_ad9371_rx_clkgen/clk_0 axi_ad9371_rx_dma/fifo_wr_clk
 ad_connect  util_ad9371_rx_cpack/packed_fifo_wr axi_ad9371_rx_dma/fifo_wr
-ad_connect  sys_dma_resetn axi_ad9371_rx_dma/m_dest_axi_aresetn
+ad_connect  $sys_dma_resetn axi_ad9371_rx_dma/m_dest_axi_aresetn
 
 # connections (adc-os)
 
@@ -298,7 +315,7 @@ ad_connect  axi_ad9371_rx_os_jesd/rx_sof rx_os_ad9371_tpl_core/link_sof
 ad_connect  axi_ad9371_rx_os_jesd/rx_data_tdata rx_os_ad9371_tpl_core/link_data
 ad_connect  axi_ad9371_rx_os_jesd/rx_data_tvalid rx_os_ad9371_tpl_core/link_valid
 ad_connect  axi_ad9371_rx_os_clkgen/clk_0 util_ad9371_rx_os_cpack/clk
-ad_connect  axi_ad9371_rx_os_jesd_rstgen/peripheral_reset util_ad9371_rx_os_cpack/reset
+ad_connect  ad9371_rx_os_device_clk_rstgen/peripheral_reset util_ad9371_rx_os_cpack/reset
 ad_connect  axi_ad9371_rx_os_clkgen/clk_0 axi_ad9371_rx_os_dma/fifo_wr_clk
 
 ad_connect  rx_os_ad9371_tpl_core/adc_valid_0 util_ad9371_rx_os_cpack/fifo_wr_en
@@ -309,7 +326,7 @@ for {set i 0} {$i < $RX_OS_NUM_OF_CONVERTERS} {incr i} {
 ad_connect  rx_os_ad9371_tpl_core/adc_dovf util_ad9371_rx_os_cpack/fifo_wr_overflow
 ad_connect  util_ad9371_rx_os_cpack/packed_fifo_wr axi_ad9371_rx_os_dma/fifo_wr
 
-ad_connect  sys_dma_resetn axi_ad9371_rx_os_dma/m_dest_axi_aresetn
+ad_connect  $sys_dma_resetn axi_ad9371_rx_os_dma/m_dest_axi_aresetn
 
 # interconnect (cpu)
 
@@ -331,17 +348,17 @@ ad_cpu_interconnect 0x7c440000 axi_ad9371_rx_os_dma
 
 # gt uses hp3, and 100MHz clock for both DRP and AXI4
 
-ad_mem_hp3_interconnect sys_cpu_clk sys_ps7/S_AXI_HP3
-ad_mem_hp3_interconnect sys_cpu_clk axi_ad9371_rx_xcvr/m_axi
-ad_mem_hp3_interconnect sys_cpu_clk axi_ad9371_rx_os_xcvr/m_axi
+ad_mem_hp3_interconnect $sys_cpu_clk sys_ps7/S_AXI_HP3
+ad_mem_hp3_interconnect $sys_cpu_clk axi_ad9371_rx_xcvr/m_axi
+ad_mem_hp3_interconnect $sys_cpu_clk axi_ad9371_rx_os_xcvr/m_axi
 
 # interconnect (mem/dac)
 
-ad_mem_hp1_interconnect sys_dma_clk sys_ps7/S_AXI_HP1
-ad_mem_hp1_interconnect sys_dma_clk axi_ad9371_tx_dma/m_src_axi
-ad_mem_hp2_interconnect sys_dma_clk sys_ps7/S_AXI_HP2
-ad_mem_hp2_interconnect sys_dma_clk axi_ad9371_rx_dma/m_dest_axi
-ad_mem_hp2_interconnect sys_dma_clk axi_ad9371_rx_os_dma/m_dest_axi
+ad_mem_hp1_interconnect $sys_dma_clk sys_ps7/S_AXI_HP1
+ad_mem_hp1_interconnect $sys_dma_clk axi_ad9371_tx_dma/m_src_axi
+ad_mem_hp2_interconnect $sys_dma_clk sys_ps7/S_AXI_HP2
+ad_mem_hp2_interconnect $sys_dma_clk axi_ad9371_rx_dma/m_dest_axi
+ad_mem_hp2_interconnect $sys_dma_clk axi_ad9371_rx_os_dma/m_dest_axi
 
 # interrupts
 

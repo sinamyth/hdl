@@ -34,11 +34,11 @@ XILINX_DEPS += ../../xilinx/common/up_xfer_cntrl_constr.xdc
 XILINX_DEPS += ../../xilinx/common/up_xfer_status_constr.xdc
 XILINX_DEPS += ad_ip_jesd204_tpl_dac_ip.tcl
 
-ALTERA_DEPS += ../../altera/common/ad_mul.v
-ALTERA_DEPS += ../../altera/common/up_clock_mon_constr.sdc
-ALTERA_DEPS += ../../altera/common/up_rst_constr.sdc
-ALTERA_DEPS += ../../altera/common/up_xfer_cntrl_constr.sdc
-ALTERA_DEPS += ../../altera/common/up_xfer_status_constr.sdc
-ALTERA_DEPS += ad_ip_jesd204_tpl_dac_hw.tcl
+INTEL_DEPS += ../../intel/common/ad_mul.v
+INTEL_DEPS += ../../intel/common/up_clock_mon_constr.sdc
+INTEL_DEPS += ../../intel/common/up_rst_constr.sdc
+INTEL_DEPS += ../../intel/common/up_xfer_cntrl_constr.sdc
+INTEL_DEPS += ../../intel/common/up_xfer_status_constr.sdc
+INTEL_DEPS += ad_ip_jesd204_tpl_dac_hw.tcl
 
 include ../../scripts/library.mk
